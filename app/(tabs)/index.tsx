@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/Input';
 
 export default function HomeScreen() {
   return (
-      <View>
+      <View className='bg-background'>
         <Text>Welcome!</Text>
         <Text>Some Text</Text>
         <Button variant={"accent"}>
