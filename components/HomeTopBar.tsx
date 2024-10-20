@@ -1,28 +1,40 @@
 import * as React from "react";
-import {Pressable, View} from "react-native";
+import {Pressable, View, StyleSheet} from "react-native";
 import TailIcon from "../assets/images/tail.svg";
 import {Text} from "./ui/Text";
 import {Button, ButtonText} from "./ui/Button";
 import {ChevronDown} from "lucide-react-native";
-import Animated, {
-  useAnimatedStyle,
-  withDelay,
-  withTiming,
-} from "react-native-reanimated";
+import Animated, {useAnimatedStyle, withDelay, withTiming} from "react-native-reanimated";
 import {SortOptions} from "@/constants/sort_options";
 import {useSortStore} from "@/store/sort";
+import {BlurView} from "expo-blur";
+import {LinearGradient} from "expo-linear-gradient";
+import LoadingSpinner from "./ui/LoadingSpinner";
 
-export default function HomeTopBar() {
+export default function HomeTopBar({hide, showLoader}: {hide?: boolean; showLoader?: boolean}) {
+  const styles = StyleSheet.create({
+    blurOverlay: {},
+  });
+
   return (
-    <View className="px-4 bg-background bg-opacity-80 backdrop-blur">
-      <View className="flex flex-row items-center h-[68px] gap-4">
-        <View className="size-7">
-          <TailIcon width={28} height={28} />
+    <>
+      <BlurView
+        className="absolute top-0 bottom-0 left-0 right-0"
+        intensity={20}
+        experimentalBlurMethod={"dimezisBlurView"}
+      />
+      <LinearGradient colors={["black", "transparent"]}>
+        <View className="px-4 bg-background/20">
+          <View className="flex flex-row items-center h-[68px] gap-4">
+            <View className="flex items-center justify-center size-7">
+              {showLoader ? <LoadingSpinner size={32} /> : <TailIcon width={28} height={28} />}
+            </View>
+            <Text className="flex-1 text-lg font-bold">Amoled Backgrounds</Text>
+            <SortPicker />
+          </View>
         </View>
-        <Text className="flex-1 text-lg font-bold">Amoled Backgrounds</Text>
-        <SortPicker />
-      </View>
-    </View>
+      </LinearGradient>
+    </>
   );
 }
 
@@ -56,21 +68,21 @@ function SortPicker() {
         <ButtonText>{store.sort}</ButtonText>
         <ChevronDown size={20} color="white" />
       </Button>
-      <Animated.View
-        style={[animatedStyle]}
-        className="absolute right-0 z-50 top-8">
+      <Animated.View style={[animatedStyle]} className="absolute right-0 z-50 top-8">
         <View className="rounded-md shadow-md bg-zinc-900">
           {Object.entries(SortOptions).map(([_, v]) => (
             <Button
               key={v}
               variant={"ghost"}
-              className="justify-start px-4 py-2 text-base"
+              className={`justify-start text-base ${store.sort === v ? "bg-accent" : ""}`}
               style={{minWidth: 110}}
               onPress={() => {
                 setIsOpen(false);
                 store.setSort(v);
               }}>
-              <ButtonText numberOfLines={1}>{v}</ButtonText>
+              <ButtonText numberOfLines={1} className={store.sort === v ? "text-foreground" : "text-foreground/70"}>
+                {v}
+              </ButtonText>
             </Button>
           ))}
         </View>
@@ -78,9 +90,7 @@ function SortPicker() {
       {/* catch outside presses */}
       <Pressable
         onPress={() => setIsOpen(false)}
-        className={`${
-          !isOpen && "hidden"
-        } absolute -top-4 -right-4 z-40 w-screen h-screen`}
+        className={`${!isOpen && "hidden"} absolute -top-4 -right-4 z-40 w-screen h-screen`}
       />
     </View>
   );

@@ -16,7 +16,7 @@ export type WallpaperPostType = {
 
 export type WallpaperImageType = {
   url: string;
-  preview_url: string;
+  preview_url?: string;
   preview_small_url?: string;
   width: number;
   height: number;
