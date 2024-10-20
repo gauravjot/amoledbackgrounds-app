@@ -10,6 +10,13 @@ module.exports = {
   ],
   presets: [require("nativewind/preset")],
   theme: {
+    fontSize: {
+      xs: ".875rem",
+      sm: "0.925rem",
+      base: "1.05rem",
+      lg: "1.125rem",
+      xl: "1.25rem",
+    },
     extend: {
       fontFamily: {
         sans: ["DMSans_400", "sans-serif"],

@@ -5,11 +5,16 @@ import {useEffect} from "react";
 import "react-native-reanimated";
 
 import "../styles/global.css";
+import {QueryClient, QueryClientProvider} from "@tanstack/react-query";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
+  // Tanstack query client
+  const queryClient = new QueryClient();
+
+  // Fonts
   const [loaded] = useFonts({
     SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
     DMSans_200: require("../assets/fonts/DMSans/DMSans-Thin.ttf"),
@@ -32,9 +37,11 @@ export default function RootLayout() {
   }
 
   return (
-    <Stack>
-      <Stack.Screen name="(tabs)" options={{ headerShown: false, }}/>
-      <Stack.Screen name="+not-found" />
-    </Stack>
+    <QueryClientProvider client={queryClient}>
+      <Stack>
+        <Stack.Screen name="(tabs)" options={{headerShown: false}} />
+        <Stack.Screen name="+not-found" />
+      </Stack>
+    </QueryClientProvider>
   );
 }
