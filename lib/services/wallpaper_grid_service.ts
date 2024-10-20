@@ -5,7 +5,7 @@ import axios from "axios";
 import {PaginationType, WallpaperImageType, WallpaperPostType} from "./wallpaper_type";
 import {WALLPAPER_MIN_ALLOWED_HEIGHT, WALLPAPER_MIN_ALLOWED_WIDTH, WALLPAPERS_POST_LIMIT} from "@/appconfig";
 
-export const getWallpapers = async (sort: SortOptions, after?: string, page_number?: number) => {
+export const getWallpapers = async (sort: SortOptions, after: string | undefined, page_number: number) => {
   const url = urlJoin(
     WALLPAPERS_URL,
     getURIFromSort(sort),
@@ -13,6 +13,9 @@ export const getWallpapers = async (sort: SortOptions, after?: string, page_numb
     after ? `&after=${after}` : "",
     `&count=${WALLPAPERS_POST_LIMIT * (page_number ?? 1)}`,
   );
+
+  console.log(url);
+
   return await axios.get(url).then(response => {
     // Process response to get the data we need
     const posts: WallpaperPostType[] = [];

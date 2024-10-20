@@ -6,6 +6,7 @@ import "react-native-reanimated";
 
 import "../styles/global.css";
 import {QueryClient, QueryClientProvider} from "@tanstack/react-query";
+import {DarkTheme, ThemeProvider} from "@react-navigation/native";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -38,10 +39,13 @@ export default function RootLayout() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{headerShown: false}} />
-        <Stack.Screen name="+not-found" />
-      </Stack>
+      <ThemeProvider value={DarkTheme}>
+        <Stack>
+          <Stack.Screen name="(tabs)" options={{headerShown: false}} />
+          <Stack.Screen name="+not-found" />
+          <Stack.Screen name="download" options={{headerShown: false}} />
+        </Stack>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }

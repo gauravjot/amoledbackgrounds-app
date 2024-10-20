@@ -4,6 +4,7 @@ import {FolderDown, Home, LucideIcon, Search, Settings} from "lucide-react-nativ
 import {View} from "react-native";
 import {Button, ButtonText} from "@/components/ui/Button";
 import {NavigationHelpers, ParamListBase, TabNavigationState} from "@react-navigation/native";
+import {SafeAreaView} from "react-native-safe-area-context";
 
 export default function TabLayout() {
   return (
@@ -107,10 +108,12 @@ function TapBar({
   }, [state]);
 
   return (
-    <View className="flex flex-row gap-1 px-4 bg-background/80 backdrop-blur">
-      {tabs.map(tab => {
-        return tab;
-      })}
-    </View>
+    <SafeAreaView>
+      <View className="flex flex-row gap-1 px-4 bg-background/80 backdrop-blur">
+        {tabs.map(tab => {
+          return tab;
+        })}
+      </View>
+    </SafeAreaView>
   );
 }

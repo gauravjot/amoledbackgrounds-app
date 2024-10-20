@@ -23,7 +23,7 @@ export type WallpaperImageType = {
 };
 
 export type PaginationType = {
-  page_number?: number;
+  page_number: number;
   before?: string;
   after?: string;
 };
