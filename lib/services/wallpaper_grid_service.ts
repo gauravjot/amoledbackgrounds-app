@@ -61,7 +61,7 @@ export const getWallpapers = async (sort: SortOptions, after: string | undefined
             id: post.id,
             image: image,
             flair: post.link_flair_text,
-            title: removeParenthesisData(post.title),
+            title: removeParenthesisData(post.title).replace(/[^\x00-\x7F]/g, ""), // remove non-ascii characters
             created_utc: new Date(post.created_utc * 1000), // convert to milliseconds
             domain: post.domain,
             score: post.score,

@@ -7,6 +7,8 @@ import "react-native-reanimated";
 import "../styles/global.css";
 import {QueryClient, QueryClientProvider} from "@tanstack/react-query";
 import {DarkTheme, ThemeProvider} from "@react-navigation/native";
+import {useSettingsStore} from "@/store/settings";
+import {useDownloadedWallpapersStore} from "@/store/downloaded_wallpapers";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -14,6 +16,14 @@ SplashScreen.preventAutoHideAsync();
 export default function RootLayout() {
   // Tanstack query client
   const queryClient = new QueryClient();
+
+  // Load async storage
+  const settingsStore = useSettingsStore();
+  const downloadedStore = useDownloadedWallpapersStore();
+  useEffect(() => {
+    settingsStore.initialize();
+    downloadedStore.initialize();
+  }, []);
 
   // Fonts
   const [loaded] = useFonts({
@@ -40,11 +50,7 @@ export default function RootLayout() {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider value={DarkTheme}>
-        <Stack>
-          <Stack.Screen name="(tabs)" options={{headerShown: false}} />
-          <Stack.Screen name="+not-found" />
-          <Stack.Screen name="download" options={{headerShown: false}} />
-        </Stack>
+        <Stack screenOptions={{headerShown: false}} />
       </ThemeProvider>
     </QueryClientProvider>
   );

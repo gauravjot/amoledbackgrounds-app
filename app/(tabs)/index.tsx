@@ -40,19 +40,12 @@ export default function HomeScreen() {
       // Lock the mutation
       setIsMutationLock(true);
       // Fetch wallpapers
-      return getWallpapers(
-        sortStore.sort,
-        posts?.pagination.after,
-        posts?.pagination.page_number ? posts.pagination.page_number + 1 : 1,
-      );
+      return getWallpapers(sortStore.sort, posts?.pagination.after, posts?.pagination.page_number ? posts.pagination.page_number + 1 : 1);
     },
     onSuccess: data => {
       // Concat if we are not on the first page
       setPosts(prev => ({
-        posts:
-          (posts?.pagination.page_number ?? 0) > 0 && prev !== null && prev !== undefined
-            ? prev.posts.concat(data.posts)
-            : data.posts,
+        posts: (posts?.pagination.page_number ?? 0) > 0 && prev !== null && prev !== undefined ? prev.posts.concat(data.posts) : data.posts,
         pagination: data.pagination,
       }));
       setIsMutationLock(false);
@@ -104,9 +97,7 @@ export default function HomeScreen() {
               <CircleX size={36} color="white" />
               <Text className="text-xl font-black">Oh no!</Text>
             </View>
-            <Text className="m-4 text-lg text-zinc-300">
-              We encountered some problem while loading wallpapers. Please try again.
-            </Text>
+            <Text className="m-4 text-lg text-zinc-300">We encountered some problem while loading wallpapers. Please try again.</Text>
             <Button className="m-4" variant={"accent"} onPress={() => wallpaperMutation.mutate()}>
               <ButtonText>Retry</ButtonText>
             </Button>
@@ -145,9 +136,7 @@ export default function HomeScreen() {
               );
             } else if ((posts?.pagination.page_number ?? 0) > 0) {
               return (
-                <Animated.View
-                  style={fadingTextAnimation}
-                  className="flex items-center justify-start w-full h-48 mb-16">
+                <Animated.View style={fadingTextAnimation} className="flex items-center justify-start w-full h-48 mb-16">
                   <Text className="pt-12 text-sm text-zinc-200">Loading more...</Text>
                 </Animated.View>
               );
@@ -160,10 +149,7 @@ export default function HomeScreen() {
 }
 
 function WallpaperGridItem(wallpaper: WallpaperPostType) {
-  const thumbnail: string =
-    (PREVIEW_USE_LOWER_QUALITY ? wallpaper.image.preview_small_url : null) ??
-    wallpaper.image.preview_url ??
-    wallpaper.image.url;
+  const thumbnail: string = (PREVIEW_USE_LOWER_QUALITY ? wallpaper.image.preview_small_url : null) ?? wallpaper.image.preview_url ?? wallpaper.image.url;
 
   // Animations
   const fadingPulseAnimation = useAnimatedStyle(() => {
@@ -187,20 +173,16 @@ function WallpaperGridItem(wallpaper: WallpaperPostType) {
 
   return (
     <View className="pb-2" style={{flex: 0.5}}>
-      <Pressable onPress={() => router.push({pathname: "/download", params: {wallpaper: JSON.stringify(wallpaper)}})}>
+      <Pressable
+        onPress={() => {
+          router.push({pathname: "/download", params: {wallpaper: JSON.stringify(wallpaper)}});
+        }}>
         <View className="relative flex-1 h-96">
-          <Animated.View
-            style={fadingPulseAnimation}
-            className="absolute top-0 left-0 z-0 w-full h-full rounded-lg bg-foreground/20"></Animated.View>
-          <Image
-            className="z-10 flex-1 object-contain w-full h-full border rounded-lg border-foreground/10"
-            source={{uri: thumbnail}}
-          />
+          <Animated.View style={fadingPulseAnimation} className="absolute top-0 left-0 z-0 w-full h-full rounded-lg bg-foreground/20"></Animated.View>
+          <Image className="z-10 flex-1 object-contain w-full h-full border rounded-lg border-foreground/10" source={{uri: thumbnail}} />
           {wallpaper.flair && (
             <View className="absolute z-20 top-2 right-2">
-              <Text className="inline px-1 text-xs font-semibold uppercase rounded bg-emerald-700">
-                {wallpaper.flair}
-              </Text>
+              <Text className="inline px-1 text-xs font-semibold uppercase rounded bg-emerald-700">{wallpaper.flair}</Text>
             </View>
           )}
           <View className="absolute left-0 z-20 flex flex-row items-center gap-2 px-1 bottom-1">

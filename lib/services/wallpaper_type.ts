@@ -5,13 +5,13 @@ export type WallpaperPostType = {
   title: string;
   created_utc: Date;
   domain?: string;
-  score?: number;
+  score: number;
   over_18?: boolean;
-  author?: string;
+  author: string;
   author_flair?: string;
-  postlink?: string;
-  comments?: string;
-  comments_link?: string;
+  postlink: string;
+  comments: string;
+  comments_link: string;
 };
 
 export type WallpaperImageType = {
