@@ -14,15 +14,13 @@ import {useSettingsStore} from "@/store/settings";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import {useDownloadedWallpapersStore} from "@/store/downloaded_wallpapers";
 import {DownloadedWallpaperPostType} from "../store/downloaded_wallpapers";
-import {NativeModules} from "react-native";
+import {setWallpaper} from "@/modules/wallpaper-manager";
 
 export default function DownloadScreen() {
   const params = useLocalSearchParams();
   const [isDownloading, setIsDownloading] = React.useState(false);
   const [isDownloaded, setIsDownloaded] = React.useState(false);
   const [downloadedFile, setDownloadedFile] = React.useState<DownloadedWallpaperPostType | null>(null);
-
-  const {WallpaperManagerModule} = NativeModules;
 
   const wallpaper = JSON.parse(params["wallpaper"] as string) as WallpaperPostType;
   const filename =
@@ -74,14 +72,27 @@ export default function DownloadScreen() {
         setIsDownloaded(true);
         // Save to downloaded store
         saveToDownloadedStore(fileuri);
+        setDownloadedFile({
+          id: wallpaper.id,
+          title: wallpaper.title,
+          uri: fileuri,
+          createdAt: new Date(),
+          width: wallpaper.image.width,
+          height: wallpaper.image.height,
+          post_link: wallpaper.postlink,
+          author: wallpaper.author,
+        });
       }
     }
   };
 
   const applyWallpaper = async () => {
     console.log("Apply Wallpaper");
-    const response = WallpaperManagerModule.setWallpaper(downloadedFile?.uri);
-    console.log(response);
+    try {
+      console.log(setWallpaper(downloadedFile?.uri as string));
+    } catch (e) {
+      console.log(e);
+    }
   };
 
   // check if current wallpaper is downloaded
