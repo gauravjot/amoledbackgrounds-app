@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "amoledbackgrounds-app",
+    "name": "AmoledBackgrounds for Reddit",
     "slug": "amoledbackgrounds-app",
     "version": "2.0.0-rc1",
     "orientation": "portrait",
@@ -45,6 +45,14 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "665ec201-58fb-4ec6-bfc5-76973af8014f"
+      }
     }
   }
 }

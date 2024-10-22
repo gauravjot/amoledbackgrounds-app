@@ -8,7 +8,8 @@
     "ios": "expo run:ios",
     "web": "expo start --web",
     "test": "jest --watchAll",
-    "lint": "expo lint"
+    "lint": "expo lint",
+    "build-android-dev": "eas build --profile development --platform android"
   },
   "jest": {
     "preset": "jest-expo"
@@ -51,7 +52,8 @@
     "url-join": "^5.0.0",
     "zustand": "^5.0.0",
     "expo-media-library": "~16.0.5",
-    "@react-native-async-storage/async-storage": "1.23.1"
+    "@react-native-async-storage/async-storage": "1.23.1",
+    "expo-dev-client": "~4.0.28"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
