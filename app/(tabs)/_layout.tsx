@@ -5,6 +5,8 @@ import {View} from "react-native";
 import {Button, ButtonText} from "@/components/ui/Button";
 import {NavigationHelpers, ParamListBase, TabNavigationState} from "@react-navigation/native";
 import {SafeAreaView} from "react-native-safe-area-context";
+import {BlurView} from "expo-blur";
+import {LinearGradient} from "expo-linear-gradient";
 
 export default function TabLayout() {
   return (
@@ -108,12 +110,19 @@ function TapBar({
   }, [state]);
 
   return (
-    <SafeAreaView>
-      <View className="flex flex-row gap-1 px-4 bg-background/80 backdrop-blur">
-        {tabs.map(tab => {
-          return tab;
-        })}
-      </View>
-    </SafeAreaView>
+    <>
+      <BlurView
+        className="absolute bottom-0 left-0 right-0 h-16"
+        intensity={20}
+        experimentalBlurMethod={"dimezisBlurView"}
+      />
+      <LinearGradient colors={["rgba(0,0,0,0.25)", "black"]} className="absolute bottom-0 left-0 right-0 ">
+        <View className="flex flex-row h-16 gap-1 px-4 bg-background/20">
+          {tabs.map(tab => {
+            return tab;
+          })}
+        </View>
+      </LinearGradient>
+    </>
   );
 }

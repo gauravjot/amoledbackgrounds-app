@@ -40,12 +40,19 @@ export default function HomeScreen() {
       // Lock the mutation
       setIsMutationLock(true);
       // Fetch wallpapers
-      return getWallpapers(sortStore.sort, posts?.pagination.after, posts?.pagination.page_number ? posts.pagination.page_number + 1 : 1);
+      return getWallpapers(
+        sortStore.sort,
+        posts?.pagination.after,
+        posts?.pagination.page_number ? posts.pagination.page_number + 1 : 1,
+      );
     },
     onSuccess: data => {
       // Concat if we are not on the first page
       setPosts(prev => ({
-        posts: (posts?.pagination.page_number ?? 0) > 0 && prev !== null && prev !== undefined ? prev.posts.concat(data.posts) : data.posts,
+        posts:
+          (posts?.pagination.page_number ?? 0) > 0 && prev !== null && prev !== undefined
+            ? prev.posts.concat(data.posts)
+            : data.posts,
         pagination: data.pagination,
       }));
       setIsMutationLock(false);
@@ -97,7 +104,9 @@ export default function HomeScreen() {
               <CircleX size={36} color="white" />
               <Text className="text-xl font-black">Oh no!</Text>
             </View>
-            <Text className="m-4 text-lg text-zinc-300">We encountered some problem while loading wallpapers. Please try again.</Text>
+            <Text className="m-4 text-lg text-zinc-300">
+              We encountered some problem while loading wallpapers. Please try again.
+            </Text>
             <Button className="m-4" variant={"accent"} onPress={() => wallpaperMutation.mutate()}>
               <ButtonText>Retry</ButtonText>
             </Button>
@@ -113,6 +122,7 @@ export default function HomeScreen() {
             </View>
           </>
         )}
+        {/* TODO: on sort change, scroll to top */}
         <FlatList
           numColumns={2}
           keyExtractor={item => item.id}
@@ -130,15 +140,28 @@ export default function HomeScreen() {
           ListFooterComponent={() => {
             if (posts && posts.pagination.after === null) {
               return (
-                <View className="flex items-center justify-start w-full h-48 mb-16">
+                <View className="flex items-center justify-start w-full mb-16 h-72">
                   <Text className="px-4 pt-12 text-sm text-zinc-400">End of posts for current filter</Text>
                 </View>
               );
             } else if ((posts?.pagination.page_number ?? 0) > 0) {
               return (
-                <Animated.View style={fadingTextAnimation} className="flex items-center justify-start w-full h-48 mb-16">
-                  <Text className="pt-12 text-sm text-zinc-200">Loading more...</Text>
-                </Animated.View>
+                <View className="flex flex-col items-center justify-start w-full mb-16 h-72">
+                  <Animated.View style={fadingTextAnimation}>
+                    <Text className="pt-12 text-sm text-zinc-200">Loading more...</Text>
+                  </Animated.View>
+                  <Button
+                    variant={"secondary"}
+                    size={"sm"}
+                    className="mt-4 opacity-60"
+                    onPress={() => {
+                      if (!wallpaperMutation.isPending) {
+                        wallpaperMutation.mutate();
+                      }
+                    }}>
+                    <ButtonText>Not loading?</ButtonText>
+                  </Button>
+                </View>
               );
             }
           }}
@@ -149,7 +172,10 @@ export default function HomeScreen() {
 }
 
 function WallpaperGridItem(wallpaper: WallpaperPostType) {
-  const thumbnail: string = (PREVIEW_USE_LOWER_QUALITY ? wallpaper.image.preview_small_url : null) ?? wallpaper.image.preview_url ?? wallpaper.image.url;
+  const thumbnail: string =
+    (PREVIEW_USE_LOWER_QUALITY ? wallpaper.image.preview_small_url : null) ??
+    wallpaper.image.preview_url ??
+    wallpaper.image.url;
 
   // Animations
   const fadingPulseAnimation = useAnimatedStyle(() => {
@@ -177,36 +203,45 @@ function WallpaperGridItem(wallpaper: WallpaperPostType) {
         onPress={() => {
           router.push({pathname: "/download", params: {wallpaper: JSON.stringify(wallpaper)}});
         }}>
-        <View className="relative flex-1 h-96">
-          <Animated.View style={fadingPulseAnimation} className="absolute top-0 left-0 z-0 w-full h-full rounded-lg bg-foreground/20"></Animated.View>
-          <Image className="z-10 flex-1 object-contain w-full h-full border rounded-lg border-foreground/10" source={{uri: thumbnail}} />
-          {wallpaper.flair && (
-            <View className="absolute z-20 top-2 right-2">
-              <Text className="inline px-1 text-xs font-semibold uppercase rounded bg-emerald-700">{wallpaper.flair}</Text>
-            </View>
-          )}
-          <View className="absolute left-0 z-20 flex flex-row items-center gap-2 px-1 bottom-1">
-            <View className="flex flex-row items-center justify-center gap-1 p-1 rounded bg-background/80">
-              <ArrowUp size={16} color="white" />
-              <Text className="text-sm text-zinc-200 pe-1">{wallpaper.score}</Text>
-            </View>
-            <View className="flex-1"></View>
-            <View className="flex flex-row items-center justify-center px-1.5 py-1 rounded bg-background/80">
-              <Text className="text-sm text-zinc-200">
-                {wallpaper.image.width} x {wallpaper.image.height}
-              </Text>
+        <View className="flex flex-col h-[26rem]">
+          <View className="relative flex-1 web:block">
+            <Animated.View
+              style={fadingPulseAnimation}
+              className="absolute top-0 left-0 z-0 w-full h-full rounded-lg bg-foreground/20"></Animated.View>
+            <Image
+              className="z-10 flex-1 object-contain w-full h-full border rounded-lg border-foreground/10"
+              source={{uri: thumbnail}}
+            />
+            {wallpaper.flair && (
+              <View className="absolute z-20 top-2 right-2">
+                <Text className="inline px-1 text-xs font-semibold uppercase rounded bg-emerald-700">
+                  {wallpaper.flair}
+                </Text>
+              </View>
+            )}
+            <View className="absolute left-0 z-20 flex flex-row items-center gap-2 px-1 bottom-1">
+              <View className="flex flex-row items-center justify-center gap-1 p-1 rounded bg-background/80">
+                <ArrowUp size={16} color="white" />
+                <Text className="text-sm text-zinc-200 pe-1">{wallpaper.score}</Text>
+              </View>
+              <View className="flex-1"></View>
+              <View className="flex flex-row items-center justify-center px-1.5 py-1 rounded bg-background/80">
+                <Text className="text-sm text-zinc-200">
+                  {wallpaper.image.width} x {wallpaper.image.height}
+                </Text>
+              </View>
             </View>
           </View>
-        </View>
-        <Text numberOfLines={1} className="flex-1 mt-2 font-semibold">
-          {wallpaper.title}
-        </Text>
-        <View className="flex flex-row flex-1 gap-1 justify-center items-center mt-1.5">
-          <MessageSquareMore size={16} color="gray" />
-          <Text className="text-sm text-zinc-400">{wallpaper.comments}</Text>
-          <Text numberOfLines={1} className="flex-1 text-sm text-zinc-400">
-            &nbsp;&bull;&nbsp; {timeSince(wallpaper.created_utc)}
+          <Text numberOfLines={1} className="mt-2 font-semibold">
+            {wallpaper.title}
           </Text>
+          <View className="flex flex-row gap-1 justify-center items-center mt-1.5">
+            <MessageSquareMore size={16} color="gray" />
+            <Text className="text-sm text-zinc-400">{wallpaper.comments}</Text>
+            <Text numberOfLines={1} className="flex-1 text-sm text-zinc-400">
+              &nbsp;&bull;&nbsp; {timeSince(wallpaper.created_utc)}
+            </Text>
+          </View>
         </View>
       </Pressable>
     </View>

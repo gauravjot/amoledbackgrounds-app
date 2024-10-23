@@ -24,7 +24,7 @@ const buttonVariants = cva("group flex items-center gap-2 justify-center rounded
     },
     flex: {
       row: "flex-row",
-      column: "flex-column",
+      column: "flex-col",
     },
   },
   defaultVariants: {

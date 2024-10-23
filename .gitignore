@@ -14,7 +14,7 @@ local.properties
 build/
 .idea
 .gradle
-
+.vscode/
 # macOS
 .DS_Store
 

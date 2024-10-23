@@ -63,7 +63,7 @@ function SortPicker() {
       <Button
         variant="ghost"
         className="border active:bg-white/20 rounded-xl bg-white/10 border-zinc-800"
-        size="sm"
+        size="md"
         onPress={() => setIsOpen(v => !v)}>
         <ButtonText>{store.sort}</ButtonText>
         <ChevronDown size={20} color="white" />

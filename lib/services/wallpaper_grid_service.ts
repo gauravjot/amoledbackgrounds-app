@@ -68,7 +68,7 @@ export const getWallpapers = async (sort: SortOptions, after: string | undefined
             over_18: post.over_18,
             author: post.author,
             author_flair: post.author_flair_text,
-            postlink: post.url,
+            postlink: "https://reddit.com" + post.permalink,
             comments: post.num_comments,
             comments_link: urlJoin(WALLPAPERS_URL, "comments", post.id + ".json"),
           };
