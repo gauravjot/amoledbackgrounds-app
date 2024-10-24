@@ -32,6 +32,7 @@ import {setWallpaper} from "@/modules/wallpaper-manager";
 import {router} from "expo-router";
 import {BlurView} from "expo-blur";
 import {LinearGradient} from "expo-linear-gradient";
+import {downloadImage} from "@/modules/download-manager";
 
 export default function DownloadScreen() {
   const params = useLocalSearchParams();
@@ -42,8 +43,8 @@ export default function DownloadScreen() {
   const [downloadedFile, setDownloadedFile] = React.useState<DownloadedWallpaperPostType | null>(null);
 
   const wallpaper = JSON.parse(params["wallpaper"] as string) as WallpaperPostType;
-  const filename =
-    wallpaper.title.replaceAll(" ", "_") + "_" + wallpaper.id + "." + wallpaper.image.url.split(".").pop();
+  const filename = wallpaper.title.replaceAll(" ", "_") + "_" + wallpaper.id + "_amoled_droidheat";
+  const file_extension = wallpaper.image.url.split(".").pop() || ".png";
 
   const settingsStore = useSettingsStore();
   const downloadedStore = useDownloadedWallpapersStore();
@@ -92,7 +93,7 @@ export default function DownloadScreen() {
       return;
     }
     setIsDownloading(true);
-    const fileuri = await download(wallpaper.image.url, filename);
+    const fileuri = await download(wallpaper.image.url, filename + "." + file_extension);
     setIsDownloading(false);
     // See if the file was saved
     if (fileuri) {
@@ -113,6 +114,13 @@ export default function DownloadScreen() {
           author: wallpaper.author,
         });
       }
+    }
+  };
+
+  const downloadUsingNative = () => {
+    const downloading = downloadImage(wallpaper.image.url, filename, file_extension);
+    if (downloading) {
+      setIsDownloading(true);
     }
   };
 
