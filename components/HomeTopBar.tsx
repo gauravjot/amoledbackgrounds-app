@@ -1,40 +1,17 @@
 import * as React from "react";
 import {Pressable, View, StyleSheet} from "react-native";
-import TailIcon from "../assets/images/tail.svg";
-import {Text} from "./ui/Text";
 import {Button, ButtonText} from "./ui/Button";
 import {ChevronDown} from "lucide-react-native";
 import Animated, {useAnimatedStyle, withDelay, withTiming} from "react-native-reanimated";
 import {SortOptions} from "@/constants/sort_options";
 import {useSortStore} from "@/store/sort";
-import {BlurView} from "expo-blur";
-import {LinearGradient} from "expo-linear-gradient";
-import LoadingSpinner from "./ui/LoadingSpinner";
+import TopBar from "./ui/TopBar";
 
 export default function HomeTopBar({hide, showLoader}: {hide?: boolean; showLoader?: boolean}) {
-  const styles = StyleSheet.create({
-    blurOverlay: {},
-  });
-
   return (
-    <>
-      <BlurView
-        className="absolute top-0 bottom-0 left-0 right-0"
-        intensity={20}
-        experimentalBlurMethod={"dimezisBlurView"}
-      />
-      <LinearGradient colors={["black", "rgba(0,0,0,0.25)"]}>
-        <View className="px-4 bg-background/20">
-          <View className="flex flex-row items-center h-[68px] gap-4">
-            <View className="flex items-center justify-center size-7">
-              {showLoader ? <LoadingSpinner size={32} /> : <TailIcon width={28} height={28} />}
-            </View>
-            <Text className="flex-1 text-lg font-bold">Amoled Backgrounds</Text>
-            <SortPicker />
-          </View>
-        </View>
-      </LinearGradient>
-    </>
+    <TopBar showLoader={showLoader}>
+      <SortPicker />
+    </TopBar>
   );
 }
 
