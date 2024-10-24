@@ -32,7 +32,7 @@ import {setWallpaper} from "@/modules/wallpaper-manager";
 import {router} from "expo-router";
 import {BlurView} from "expo-blur";
 import {LinearGradient} from "expo-linear-gradient";
-import {downloadImage} from "@/modules/download-manager";
+import * as DownloadManager from "@/modules/download-manager";
 
 export default function DownloadScreen() {
   const params = useLocalSearchParams();
@@ -43,7 +43,9 @@ export default function DownloadScreen() {
   const [downloadedFile, setDownloadedFile] = React.useState<DownloadedWallpaperPostType | null>(null);
 
   const wallpaper = JSON.parse(params["wallpaper"] as string) as WallpaperPostType;
-  const filename = wallpaper.title.replaceAll(" ", "_") + "_" + wallpaper.id + "_amoled_droidheat";
+  const filename = `${wallpaper.title.replaceAll(" ", "_")}_-_${wallpaper.image.width}x${wallpaper.image.height}_${
+    wallpaper.id
+  }_amoled_droidheat`;
   const file_extension = wallpaper.image.url.split(".").pop() || ".png";
 
   const settingsStore = useSettingsStore();
@@ -88,46 +90,42 @@ export default function DownloadScreen() {
     }
   };
 
-  const downloadWallpaper = async () => {
-    if (isDownloaded) {
-      return;
-    }
-    setIsDownloading(true);
-    const fileuri = await download(wallpaper.image.url, filename + "." + file_extension);
-    setIsDownloading(false);
-    // See if the file was saved
-    if (fileuri) {
-      const file = await FileSystem.getInfoAsync(fileuri);
-      if (file.exists) {
-        // file was downloaded successfully, set the flag
-        setIsDownloaded(true);
-        // Save to downloaded store
-        saveToDownloadedStore(fileuri);
-        setDownloadedFile({
-          id: wallpaper.id,
-          title: wallpaper.title,
-          uri: fileuri,
-          createdAt: new Date(),
-          width: wallpaper.image.width,
-          height: wallpaper.image.height,
-          post_link: wallpaper.postlink,
-          author: wallpaper.author,
-        });
+  const downloadUsingNative = () => {
+    try {
+      const downloading = DownloadManager.downloadImage(wallpaper.image.url, filename, file_extension);
+      if (downloading) {
+        setIsDownloading(true);
       }
+    } catch (e) {
+      console.log(e);
     }
   };
 
-  const downloadUsingNative = () => {
-    const downloading = downloadImage(wallpaper.image.url, filename, file_extension);
-    if (downloading) {
-      setIsDownloading(true);
-    }
-  };
+  useEffect(() => {
+    // download complete listener
+    const downloadCompleteListener = DownloadManager.downloadCompleteListener(e => {
+      setIsDownloading(false);
+      setIsDownloaded(e.success);
+      if (e.success) {
+        saveToDownloadedStore(e.path);
+        setDownloadedFile({
+          title: wallpaper.title,
+          path: e.path,
+          width: wallpaper.image.width,
+          height: wallpaper.image.height,
+        });
+      }
+    });
+
+    return () => {
+      downloadCompleteListener.remove();
+    };
+  }, []);
 
   const applyWallpaper = () => {
     try {
       setIsWallpaperApplying(true);
-      setIsWallpaperApplied(setWallpaper(downloadedFile?.uri as string));
+      setIsWallpaperApplied(setWallpaper(downloadedFile?.path as string));
     } catch (e) {
       // TODO: Log this error somewhere
       console.log(e);
@@ -137,16 +135,16 @@ export default function DownloadScreen() {
 
   // check if current wallpaper is downloaded
   useEffect(() => {
-    const saved_file = downloadedStore.getFile(wallpaper.id);
+    const saved_file = downloadedStore.getFile(filename);
     if (saved_file) {
-      FileSystem.getInfoAsync(saved_file.uri)
+      FileSystem.getInfoAsync(saved_file.path)
         .then(() => {
           setIsDownloaded(true);
           setDownloadedFile(saved_file);
         })
         .catch(e => {
           setIsDownloaded(false);
-          downloadedStore.removeFile(wallpaper.id);
+          downloadedStore.removeFile(filename);
         });
     } else {
       setIsDownloaded(false);
@@ -187,7 +185,7 @@ export default function DownloadScreen() {
               <Button
                 variant={"accent"}
                 className="absolute z-30 rounded-full -top-6 right-4"
-                onPress={downloadWallpaper}>
+                onPress={downloadUsingNative}>
                 <ArrowDownCircle size={16} color="white" />
                 <ButtonText>Download</ButtonText>
               </Button>
@@ -304,16 +302,12 @@ export default function DownloadScreen() {
     }
   }
 
-  function saveToDownloadedStore(fileuri: string) {
+  function saveToDownloadedStore(path: string) {
     downloadedStore.addFile({
-      id: wallpaper.id,
       title: wallpaper.title,
-      uri: fileuri,
-      createdAt: new Date(),
+      path: path,
       width: wallpaper.image.width,
       height: wallpaper.image.height,
-      post_link: wallpaper.postlink,
-      author: wallpaper.author,
     });
   }
 }

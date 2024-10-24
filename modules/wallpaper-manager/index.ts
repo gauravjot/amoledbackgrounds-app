@@ -6,8 +6,8 @@ import WallpaperManagerModule from "./src/WallpaperManagerModule";
 import WallpaperManagerView from "./src/WallpaperManagerView";
 import {ChangeEventPayload, WallpaperManagerViewProps} from "./src/WallpaperManager.types";
 
-export function setWallpaper(uri: string) {
-  return WallpaperManagerModule.setWallpaper(uri);
+export function setWallpaper(path: string) {
+  return WallpaperManagerModule.setWallpaper(path);
 }
 
 const emitter = new EventEmitter(WallpaperManagerModule ?? NativeModulesProxy.WallpaperManager);

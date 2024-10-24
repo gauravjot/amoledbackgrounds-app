@@ -9,6 +9,7 @@ import android.graphics.BitmapFactory
 import java.io.IOException
 import android.provider.MediaStore
 import android.net.Uri;
+import android.media.MediaScannerConnection
 
 class WallpaperManagerModule : Module() {
 
@@ -27,8 +28,8 @@ class WallpaperManagerModule : Module() {
     // Defines event names that the module can send to JavaScript.
     Events("onChange")
 
-    Function("setWallpaper") { uri: String ->
-      setWallpaper(context, uri)
+    Function("setWallpaper") { path: String ->
+      setWallpaper(context, path)
     }
 
     // Enables the module to be used as a native view. Definition components that are accepted as part of
@@ -42,23 +43,29 @@ class WallpaperManagerModule : Module() {
   }
 
 
-  fun setWallpaper(context: Context, uri: String): Boolean {
+  fun setWallpaper(context: Context, path: String): Boolean {
+    var isSuccess = false
     // Set wallpaper
     val wallpaperManager = WallpaperManager.getInstance(context)
 
     val options: BitmapFactory.Options = BitmapFactory.Options()
     options.inPreferredConfig = Bitmap.Config.ARGB_8888
 
-    val bitmap: Bitmap = MediaStore.Images.Media.getBitmap(context.getContentResolver(), Uri.parse(uri));
-
-    if (bitmap != null) {
-      try {
-        wallpaperManager.setBitmap(bitmap)
-        return true
-      } catch (e: IOException) {
-        e.printStackTrace()
+    MediaScannerConnection.scanFile(context, arrayOf(path), null,
+      object : MediaScannerConnection.OnScanCompletedListener {
+        override fun onScanCompleted(path: String, uri: Uri) {
+          val bitmap: Bitmap = MediaStore.Images.Media.getBitmap(context.getContentResolver(), uri);
+          if (bitmap != null) {
+            try {
+              wallpaperManager.setBitmap(bitmap)
+              isSuccess = true
+            } catch (e: IOException) {
+              e.printStackTrace()
+            }
+          }
+        }
       }
-    }
-    return false
+    )
+    return isSuccess
   }
 }
