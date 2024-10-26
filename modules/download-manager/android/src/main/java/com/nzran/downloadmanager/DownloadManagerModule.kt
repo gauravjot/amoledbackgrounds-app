@@ -16,8 +16,12 @@ import android.net.Uri
 import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
-import android.util.Log;
+import android.util.Log
 import androidx.core.os.bundleOf
+import java.util.concurrent.Executors
+import android.os.Handler
+import android.os.Looper
+import android.os.Message
 
 import java.io.File
 import java.nio.file.Files
@@ -29,23 +33,31 @@ class DownloadManagerModule : Module() {
   private val context
   get() = requireNotNull(appContext.reactContext)
 
+  val executor = Executors.newSingleThreadExecutor()
   val downloadPath: String = "/storage/emulated/0/Pictures/"
+  var isDownloadComplete = false
+
+  val downloadProgressHandler = Handler(Looper.getMainLooper(), Handler.Callback { msg ->
+    if (msg.what == 1) {
+        this@DownloadManagerModule.sendEvent("onDownloadProgress", bundleOf("progress" to msg.arg1))
+    }
+    true
+  })
 
   // Each module class must implement the definition function. The definition consists of components
   // that describes the module's functionality and behavior.
   // See https://docs.expo.dev/modules/module-api for more details about available components.
   override fun definition() = ModuleDefinition {
-    // Sets the name of the module that JavaScript code will use to refer to the module. Takes a string as an argument.
-    // Can be inferred from module's class name, but it's recommended to set it explicitly for clarity.
-    // The module will be accessible from `requireNativeModule('DownloadManager')` in JavaScript.
     Name("DownloadManager")
 
+
     // Download image function
-    Function("downloadImage") { uri: String, filename: String, file_extension: String ->
-      downloadImage(context, uri, filename, file_extension)
+    Function("downloadImage") { url: String, filename: String, file_extension: String ->
+      downloadImage(context, url, filename, file_extension)
     }
-    // Event to notify JavaScript when download is complete
-    Events("onDownloadComplete")
+
+    // Event to notify
+    Events("onDownloadComplete", "onDownloadProgress")
 
     // Function to get downloaded files
     Function("getDownloadedFiles") {
@@ -115,7 +127,7 @@ class DownloadManagerModule : Module() {
    *
    */
   fun hasPermissionForStorage(): Boolean {
-    var permission = android.Manifest.permission.WRITE_EXTERNAL_STORAGE
+    var permission = android.Manifest.permission.READ_EXTERNAL_STORAGE
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
       permission = android.Manifest.permission.READ_MEDIA_IMAGES
     }
@@ -137,6 +149,7 @@ class DownloadManagerModule : Module() {
     val downloadUri = Uri.parse(url)
     this.filename = filename
     this.file_extension = file_extension
+    this.isDownloadComplete = false
 
     val request = DownloadManager.Request(downloadUri)
     request.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI or DownloadManager.Request.NETWORK_MOBILE)
@@ -149,6 +162,35 @@ class DownloadManagerModule : Module() {
     downloadId = downloadManager.enqueue(request)
     // register receiver to listen for download completion
     context.registerReceiver(downloadReceiver, IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE), android.content.Context.RECEIVER_EXPORTED)
+    // setup executor to track download progress
+    executor.execute(Runnable {
+      while (isDownloadComplete == false && downloadId != 0L) {
+        try {
+          val cursor = downloadManager.query(DownloadManager.Query().setFilterById(downloadId))
+          if (cursor != null && cursor.moveToFirst()) {
+            val status = cursor.getInt(cursor.getColumnIndex(DownloadManager.COLUMN_STATUS))
+            if (status == DownloadManager.STATUS_SUCCESSFUL) {
+                isDownloadComplete = true
+            }
+
+            val bytesDownloaded = cursor.getInt(cursor.getColumnIndex(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR))
+            val bytesTotal = cursor.getInt(cursor.getColumnIndex(DownloadManager.COLUMN_TOTAL_SIZE_BYTES))
+            val progress = if (bytesTotal > 0) (bytesDownloaded * 100L / bytesTotal).toInt() else 0
+
+            val message = Message.obtain()
+            message.what = 1
+            message.arg1 = progress
+            downloadProgressHandler.sendMessage(message)
+            cursor?.close()
+          } else {
+            isDownloadComplete = true
+          }
+        } catch (e: Exception) {
+          Log.e("DownloadManagerModule", "Failed to track download progress", e)
+        }
+        Thread.sleep(1000)
+      }
+    })
     return true
   }
 
@@ -157,49 +199,54 @@ class DownloadManagerModule : Module() {
     override fun onReceive(context: Context, intent: Intent) {
       val id = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1)
       if (id == downloadId) {
-        try {
-          var file: File = File(downloadPath + filename + ".download")
-          if (!file.exists()) {
-            throw Exception("Downloaded file not found")
-          }
-          // rename file to remove .download extension
-          Files.move(file.toPath(), file.toPath().resolveSibling(filename+"."+file_extension))
-          file = File(downloadPath + filename + "." + file_extension)
-          // Remove from MediaStore
-          val contentResolver: ContentResolver = context.getContentResolver()
-          val contentUri: Uri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI
-          val selection: String = MediaStore.Images.Media.DISPLAY_NAME + " = ?"
-          contentResolver.delete(contentUri, selection, arrayOf(filename+".download"))
-          // Add renamed file to MediaStore
-          val values = ContentValues()
-          values.put(MediaStore.Images.Media.DISPLAY_NAME, filename + "." + file_extension)
-          MediaScannerConnection.scanFile(context, arrayOf(file.getAbsolutePath()), null,
-            object : MediaScannerConnection.OnScanCompletedListener {
-              override fun onScanCompleted(path: String, uri: Uri) {
-                val success = context.getContentResolver().update(uri, values, null, null) == 1
-                if (!success) {
-                  throw Exception("Failed to update renamed image in MediaStore")
-                }
-              }
-            }
-          )
-          this@DownloadManagerModule.sendEvent("onDownloadComplete", bundleOf(
-            "success" to true,
-            "path" to file.getAbsolutePath()
-          ))
-        } catch (e: Exception) {
-          Log.e("DownloadManagerModule", "Failed to download image", e)
-          // TODO: send error to JavaScript or handle it here
-
-          // send event to JavaScript
-          this@DownloadManagerModule.sendEvent("onDownloadComplete", bundleOf(
-            "success" to false,
-            "path" to ""
-          ))
-        }
+        isDownloadComplete = true
+        sendDownloadedFileInfo()
         // unregister receiver
         context.unregisterReceiver(this)
       }
+    }
+  }
+
+  fun sendDownloadedFileInfo() {
+    try {
+      var file: File = File(downloadPath + filename + ".download")
+      if (!file.exists()) {
+        throw Exception("Downloaded file not found")
+      }
+      // rename file to remove .download extension
+      Files.move(file.toPath(), file.toPath().resolveSibling(filename+"."+file_extension))
+      file = File(downloadPath + filename + "." + file_extension)
+      // Remove from MediaStore
+      val contentResolver: ContentResolver = context.getContentResolver()
+      val contentUri: Uri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+      val selection: String = MediaStore.Images.Media.DISPLAY_NAME + " = ?"
+      contentResolver.delete(contentUri, selection, arrayOf(filename+".download"))
+      // Add renamed file to MediaStore
+      val values = ContentValues()
+      values.put(MediaStore.Images.Media.DISPLAY_NAME, filename + "." + file_extension)
+      MediaScannerConnection.scanFile(context, arrayOf(file.getAbsolutePath()), null,
+        object : MediaScannerConnection.OnScanCompletedListener {
+          override fun onScanCompleted(path: String, uri: Uri) {
+            val success = context.getContentResolver().update(uri, values, null, null) == 1
+            if (!success) {
+              throw Exception("Failed to update renamed image in MediaStore")
+            }
+          }
+        }
+      )
+      this@DownloadManagerModule.sendEvent("onDownloadComplete", bundleOf(
+        "success" to true,
+        "path" to file.getAbsolutePath()
+      ))
+    } catch (e: Exception) {
+      Log.e("DownloadManagerModule", "Failed to download image", e)
+      // TODO: send error to JavaScript or handle it here
+
+      // send event to JavaScript
+      this@DownloadManagerModule.sendEvent("onDownloadComplete", bundleOf(
+        "success" to false,
+        "path" to ""
+      ))
     }
   }
 }

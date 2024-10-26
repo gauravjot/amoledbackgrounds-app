@@ -14,9 +14,14 @@ export function downloadImage(url: string, filename: string, file_extension: str
 }
 
 const emitter = new EventEmitter(DownloadManagerModule ?? NativeModulesProxy.DownloadManager);
+
 export type DownloadCompleteEvent = {success: boolean; path: string};
 export function downloadCompleteListener(listener: (event: DownloadCompleteEvent) => void): Subscription {
   return emitter.addListener<DownloadCompleteEvent>("onDownloadComplete", listener);
+}
+
+export function downloadProgressListener(listener: (event: {progress: number}) => void): Subscription {
+  return emitter.addListener<{progress: number}>("onDownloadProgress", listener);
 }
 
 export function getDownloadedFiles(): {name: string; path: string}[] {

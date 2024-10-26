@@ -12,7 +12,7 @@ export function setWallpaper(path: string) {
 
 const emitter = new EventEmitter(WallpaperManagerModule ?? NativeModulesProxy.WallpaperManager);
 
-export function addChangeListener(listener: (event: ChangeEventPayload) => void): Subscription {
+export function onChangeListener(listener: (event: ChangeEventPayload) => void): Subscription {
   return emitter.addListener<ChangeEventPayload>("onChange", listener);
 }
 

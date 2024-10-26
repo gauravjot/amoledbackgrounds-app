@@ -8,8 +8,9 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import java.io.IOException
 import android.provider.MediaStore
-import android.net.Uri;
+import android.net.Uri
 import android.media.MediaScannerConnection
+import androidx.core.os.bundleOf
 
 class WallpaperManagerModule : Module() {
 
@@ -43,8 +44,7 @@ class WallpaperManagerModule : Module() {
   }
 
 
-  fun setWallpaper(context: Context, path: String): Boolean {
-    var isSuccess = false
+  fun setWallpaper(context: Context, path: String) {
     // Set wallpaper
     val wallpaperManager = WallpaperManager.getInstance(context)
 
@@ -58,14 +58,20 @@ class WallpaperManagerModule : Module() {
           if (bitmap != null) {
             try {
               wallpaperManager.setBitmap(bitmap)
-              isSuccess = true
+              // send event to JavaScript
+              this@WallpaperManagerModule.sendEvent("onChange", bundleOf(
+                "success" to true
+              ))
             } catch (e: IOException) {
               e.printStackTrace()
+              // send event to JavaScript
+              this@WallpaperManagerModule.sendEvent("onChange", bundleOf(
+                "success" to false
+              ))
             }
           }
         }
       }
     )
-    return isSuccess
   }
 }

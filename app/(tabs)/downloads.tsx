@@ -14,8 +14,6 @@ export default function DownloadsScreen() {
 
   const posts = downloadedWallpapersStore.files;
 
-  console.log(posts);
-
   return (
     <SafeAreaView className="bg-background">
       <TopBar showLoader={false} title="Downloads"></TopBar>

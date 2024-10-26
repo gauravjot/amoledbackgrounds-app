@@ -1,5 +1,5 @@
 export type ChangeEventPayload = {
-  value: string;
+  success: boolean;
 };
 
 export type WallpaperManagerViewProps = {

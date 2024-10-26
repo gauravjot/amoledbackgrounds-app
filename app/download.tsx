@@ -28,7 +28,7 @@ import {useSettingsStore} from "@/store/settings";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import {useDownloadedWallpapersStore} from "@/store/downloaded_wallpapers";
 import {DownloadedWallpaperPostType} from "../store/downloaded_wallpapers";
-import {setWallpaper} from "@/modules/wallpaper-manager";
+import {setWallpaper, onChangeListener} from "@/modules/wallpaper-manager";
 import {router} from "expo-router";
 import {BlurView} from "expo-blur";
 import {LinearGradient} from "expo-linear-gradient";
@@ -38,6 +38,8 @@ export default function DownloadScreen() {
   const params = useLocalSearchParams();
   const [isDownloading, setIsDownloading] = React.useState(false);
   const [isDownloaded, setIsDownloaded] = React.useState(false);
+  const [isDownloadFailed, setIsDownloadFailed] = React.useState(false);
+  const [downloadProgress, setDownloadProgress] = React.useState(0);
   const [isWallpaperApplying, setIsWallpaperApplying] = React.useState(false);
   const [isWallpaperApplied, setIsWallpaperApplied] = React.useState(false);
   const [downloadedFile, setDownloadedFile] = React.useState<DownloadedWallpaperPostType | null>(null);
@@ -45,13 +47,14 @@ export default function DownloadScreen() {
   const wallpaper = JSON.parse(params["wallpaper"] as string) as WallpaperPostType;
   const filename = `${wallpaper.title.replaceAll(" ", "_")}_-_${wallpaper.image.width}x${wallpaper.image.height}_${
     wallpaper.id
-  }_amoled_droidheat`;
+  }_amoled_droidheat`.replaceAll("%", "");
   const file_extension = wallpaper.image.url.split(".").pop() || ".png";
 
   const settingsStore = useSettingsStore();
   const downloadedStore = useDownloadedWallpapersStore();
 
   console.log("Has storage permission ", DownloadManager.hasPermissionForStorage());
+  console.log(wallpaper);
 
   // Animations
   const fadingPulseAnimation = useAnimatedStyle(() => {
@@ -116,23 +119,43 @@ export default function DownloadScreen() {
           width: wallpaper.image.width,
           height: wallpaper.image.height,
         });
+      } else {
+        setIsDownloadFailed(true);
+        console.log("Download failed");
       }
+    });
+
+    // wallpaper change listener
+    const wallpaperChangeListener = onChangeListener(e => {
+      if (e.success) {
+        setIsWallpaperApplied(true);
+        setIsWallpaperApplying(false);
+      } else {
+        setIsWallpaperApplied(false);
+        setIsWallpaperApplying(false);
+      }
+    });
+
+    // download progress listener
+    const downloadProgressListener = DownloadManager.downloadProgressListener(e => {
+      setDownloadProgress(e.progress);
     });
 
     return () => {
       downloadCompleteListener.remove();
+      wallpaperChangeListener.remove();
+      downloadProgressListener.remove();
     };
   }, []);
 
   const applyWallpaper = () => {
     try {
       setIsWallpaperApplying(true);
-      setIsWallpaperApplied(setWallpaper(downloadedFile?.path as string));
+      setWallpaper(downloadedFile?.path as string);
     } catch (e) {
       // TODO: Log this error somewhere
       console.log(e);
     }
-    setIsWallpaperApplying(false);
   };
 
   // check if current wallpaper is downloaded
@@ -201,6 +224,11 @@ export default function DownloadScreen() {
                 <CheckCircle size={16} color="white" />
                 <ButtonText>Applied</ButtonText>
               </Button>
+            ) : isDownloading ? (
+              <Button variant={"accent"} className="absolute z-30 rounded-full -top-6 right-4" disabled>
+                <LoadingSpinner />
+                <ButtonText>Downloading {downloadProgress}%</ButtonText>
+              </Button>
             ) : (
               <Button variant={"accent"} className="absolute z-30 rounded-full -top-6 right-4" disabled>
                 <LoadingSpinner />
@@ -264,45 +292,6 @@ export default function DownloadScreen() {
       </SafeAreaView>
     </View>
   );
-
-  async function download(url: string, filename: string): Promise<string | null> {
-    const result = await FileSystem.downloadAsync(url, FileSystem.documentDirectory + filename);
-    return saveFile(result.uri, filename, result.headers["content-type"]);
-
-    async function saveFile(uri: string, filename: string, mimetype: string) {
-      if (Platform.OS === "android") {
-        const permissions = await FileSystem.StorageAccessFramework.requestDirectoryPermissionsAsync(
-          settingsStore.downloadDir,
-        );
-
-        if (permissions.granted) {
-          // Save directory URI to settings
-          let dir_uri = permissions.directoryUri;
-          if (settingsStore.downloadDir !== dir_uri) {
-            settingsStore.setDownloadDir(dir_uri);
-          }
-          const base64 = await FileSystem.readAsStringAsync(uri, {encoding: FileSystem.EncodingType.Base64});
-          try {
-            const fileuri = await FileSystem.StorageAccessFramework.createFileAsync(
-              permissions.directoryUri,
-              filename,
-              mimetype,
-            );
-            await FileSystem.writeAsStringAsync(fileuri, base64, {encoding: FileSystem.EncodingType.Base64});
-            // return the file uri
-            return fileuri;
-          } catch (error) {
-            console.error(error);
-          }
-        } else {
-          shareAsync(uri);
-        }
-      } else {
-        shareAsync(uri);
-      }
-      return null;
-    }
-  }
 
   function saveToDownloadedStore(path: string) {
     downloadedStore.addFile({

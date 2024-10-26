@@ -65,7 +65,7 @@ const Button = React.forwardRef<React.ElementRef<typeof Pressable>, ButtonProps>
   ({className, variant, size, flex, ...props}, ref) => {
     return (
       <Pressable
-        className={cn(props.disabled && "opacity-50", buttonVariants({variant, size, flex, className}))}
+        className={cn(props.disabled && "opacity-80", buttonVariants({variant, size, flex, className}))}
         ref={ref}
         role="button"
         {...props}
