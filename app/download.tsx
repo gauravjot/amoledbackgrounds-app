@@ -51,6 +51,8 @@ export default function DownloadScreen() {
   const settingsStore = useSettingsStore();
   const downloadedStore = useDownloadedWallpapersStore();
 
+  console.log("Has storage permission ", DownloadManager.hasPermissionForStorage());
+
   // Animations
   const fadingPulseAnimation = useAnimatedStyle(() => {
     return {

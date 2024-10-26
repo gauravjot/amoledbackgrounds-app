@@ -8,11 +8,14 @@ import Animated, {useAnimatedStyle, withRepeat, withSequence, withTiming} from "
 import {Button} from "@/components/ui/Button";
 import {ImageIcon} from "lucide-react-native";
 import * as WallpaperManager from "@/modules/wallpaper-manager";
+import {ImageView} from "@/modules/image-view";
 
 export default function DownloadsScreen() {
   const downloadedWallpapersStore = useDownloadedWallpapersStore();
 
   const posts = downloadedWallpapersStore.files;
+
+  console.log(posts);
 
   return (
     <SafeAreaView className="bg-background">
@@ -67,6 +70,9 @@ function WallpaperGridItem(wallpaper: DownloadedWallpaperPostType) {
             className="z-10 flex-1 object-contain w-full h-full border rounded-lg border-foreground/10"
             source={{uri: ""}}
           /> */}
+          <View className="z-10 flex-1 w-full h-full border rounded-lg border-foreground/10">
+            <ImageView path={wallpaper.path} />
+          </View>
           <Button
             variant={"ghost"}
             size="icon"

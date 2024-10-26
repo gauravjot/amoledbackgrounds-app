@@ -3,7 +3,6 @@ package com.nzran.downloadmanager
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
 
-import android.app.AlertDialog
 import android.app.DownloadManager
 import android.content.BroadcastReceiver
 import android.content.ContentResolver
@@ -12,25 +11,18 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
-import android.graphics.Color
 import android.media.MediaScannerConnection
 import android.net.Uri
 import android.os.Build
-import android.os.Bundle
 import android.os.Environment
-import android.os.Handler
 import android.provider.MediaStore
 import android.util.Log;
 import androidx.core.os.bundleOf
 
 import java.io.File
 import java.nio.file.Files
-import java.text.SimpleDateFormat
 import java.util.ArrayList
-import java.util.Date
 import java.util.HashMap
-import java.util.Objects
-import java.util.concurrent.Executors
 
 class DownloadManagerModule : Module() {
 
@@ -48,24 +40,56 @@ class DownloadManagerModule : Module() {
     // The module will be accessible from `requireNativeModule('DownloadManager')` in JavaScript.
     Name("DownloadManager")
 
+    // Download image function
     Function("downloadImage") { uri: String, filename: String, file_extension: String ->
       downloadImage(context, uri, filename, file_extension)
     }
-
+    // Event to notify JavaScript when download is complete
     Events("onDownloadComplete")
 
+    // Function to get downloaded files
     Function("getDownloadedFiles") {
-      val files = File(downloadPath).listFiles()
-      val downloadedFiles = ArrayList<HashMap<String, String>>()
-      if (files != null) {
-        for (file in files) {
-          val fileMap = HashMap<String, String>()
-          fileMap["name"] = file.name
-          fileMap["path"] = file.absolutePath
-          downloadedFiles.add(fileMap)
+      val result = ArrayList<HashMap<String, String>>()
+      val contentResolver: ContentResolver = context.getContentResolver()
+      val projection = arrayOf(
+        MediaStore.Images.Media._ID,
+        MediaStore.Images.Media.DISPLAY_NAME,
+        MediaStore.Images.Media.HEIGHT,
+        MediaStore.Images.Media.WIDTH,
+        MediaStore.Images.Media.RELATIVE_PATH
+      )
+      val selection = ""
+      val selectionArgs = arrayOf<String>()
+      val sortOrder = "${MediaStore.Images.Media.DATE_ADDED} DESC"
+
+      try {
+        val cursor = contentResolver.query(
+          MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+          projection,
+          selection,
+          selectionArgs,
+          sortOrder
+        )
+        if (cursor != null) {
+          while (cursor.moveToNext()) {
+            val name = cursor.getString(cursor.getColumnIndex(MediaStore.Images.Media.DISPLAY_NAME))
+            val path = cursor.getString(cursor.getColumnIndex(MediaStore.Images.Media.RELATIVE_PATH))
+            val fileMap = HashMap<String, String>()
+            fileMap["name"] = name
+            fileMap["path"] = "/storage/emulated/0/" + path + name
+            result.add(fileMap)
+          }
+          cursor.close()
         }
+      } catch (e: Exception) {
+        Log.e("DownloadManagerModule", "Failed to get downloaded files", e)
       }
-      downloadedFiles
+      result
+    }
+
+    // Permission
+    Function("hasPermissionForStorage") {
+      hasPermissionForStorage()
     }
 
     // Defines a JavaScript function that always returns a Promise and whose native code
@@ -87,6 +111,23 @@ class DownloadManagerModule : Module() {
     }
   }
 
+  /**
+   *
+   */
+  fun hasPermissionForStorage(): Boolean {
+    var permission = android.Manifest.permission.WRITE_EXTERNAL_STORAGE
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+      permission = android.Manifest.permission.READ_MEDIA_IMAGES
+    }
+    if (context.checkSelfPermission(permission) == PackageManager.PERMISSION_GRANTED) {
+      return true
+    }
+    return false
+  }
+
+  /**
+   * Download image from given URL
+   */
   var downloadId: Long = 0
   var filename: String = ""
   var file_extension: String = ""
