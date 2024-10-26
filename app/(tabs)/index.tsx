@@ -77,7 +77,7 @@ export default function HomeScreen() {
     <SafeAreaView className="bg-background">
       <View className="h-screen bg-background">
         <View className="absolute top-0 z-10 w-full">
-          <HomeTopBar showLoader={posts !== null && wallpaperMutation.isPending} />
+          <HomeTopBar showLoader={posts !== null && wallpaperMutation.isPending} title="Amoled Backgrounds" />
         </View>
         {wallpaperMutation.isError && wallpaperMutation.error.message?.includes("SafeError") && (
           <View className="absolute top-0 right-0 z-50 flex justify-center w-full h-screen bg-background/70">
@@ -114,7 +114,7 @@ export default function HomeScreen() {
             }
           }}
           onEndReachedThreshold={0.5}
-          className="z-0 w-full px-3 pt-24"
+          className="z-0 w-full px-3 pt-20"
           columnWrapperClassName="gap-4"
           contentContainerClassName="gap-4"
           renderItem={({item}) => <OnlineWallpaperGridItem {...item} />}

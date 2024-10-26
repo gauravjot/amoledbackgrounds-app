@@ -7,9 +7,9 @@ import {SortOptions} from "@/constants/sort_options";
 import {useSortStore} from "@/store/sort";
 import TopBar from "./ui/TopBar";
 
-export default function HomeTopBar({hide, showLoader}: {hide?: boolean; showLoader?: boolean}) {
+export default function HomeTopBar({hide, showLoader, title}: {hide?: boolean; showLoader?: boolean; title: string}) {
   return (
-    <TopBar showLoader={showLoader}>
+    <TopBar showLoader={showLoader} title={title}>
       <SortPicker />
     </TopBar>
   );

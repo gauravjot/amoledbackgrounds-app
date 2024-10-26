@@ -1,17 +1,37 @@
-import {FlatList, Image, View} from "react-native";
+import {FlatList, Image, ToastAndroid, View} from "react-native";
 import React from "react";
 import {Text} from "@/components/ui/Text";
 import {SafeAreaView} from "react-native-safe-area-context";
 import {DownloadedWallpaperPostType, useDownloadedWallpapersStore} from "@/store/downloaded_wallpapers";
 import TopBar from "@/components/ui/TopBar";
 import Animated from "react-native-reanimated";
-import {Button} from "@/components/ui/Button";
-import {ImageIcon} from "lucide-react-native";
+import {Button, ButtonText} from "@/components/ui/Button";
+import {CheckCircle, ImageIcon} from "lucide-react-native";
 import * as WallpaperManager from "@/modules/wallpaper-manager";
 import {fadingPulseAnimation} from "@/lib/animations/fading_pulse";
+import {onChangeListener} from "../../modules/wallpaper-manager/index";
+
+type WallpaperApplyState = {
+  status: "idle" | "applying" | "applied" | "error";
+  path: string;
+};
 
 export default function DownloadedWallpapersScreen() {
+  const [applyState, setApplyState] = React.useState<WallpaperApplyState>({status: "idle", path: ""});
   const posts = useDownloadedWallpapersStore().files;
+
+  // Listeners
+  React.useEffect(() => {
+    // wallpaper change listener
+    const wallpaperChangeListener = onChangeListener(e => {
+      setApplyState({status: e.success ? "applied" : "error", path: applyState.path});
+      if (e.success) ToastAndroid.show("Wallpaper applied successfully", ToastAndroid.SHORT);
+    });
+    return () => {
+      // When component is killed, clear all listeners
+      wallpaperChangeListener.remove();
+    };
+  }, []);
 
   return (
     <SafeAreaView className="bg-background">
@@ -23,10 +43,19 @@ export default function DownloadedWallpapersScreen() {
           numColumns={2}
           keyExtractor={item => item.path}
           data={posts}
-          className="z-0 w-full px-3 pt-24"
+          className="z-0 w-full px-3 pt-20"
           columnWrapperClassName="gap-4"
           contentContainerClassName="gap-4"
-          renderItem={({item}) => <WallpaperGridItem {...item} />}
+          renderItem={({item}) => (
+            <WallpaperGridItem
+              wallpaper={item}
+              isApplied={applyState.status === "applied" && applyState.path === item.path}
+              applyWallpaper={() => {
+                WallpaperManager.setWallpaper(item.path);
+                setApplyState({status: "applying", path: item.path});
+              }}
+            />
+          )}
           ListFooterComponent={() => (
             <View className="flex items-center justify-start w-full mb-16 h-52">
               <Text className="px-4 pt-12 text-sm text-zinc-400">End of posts for current filter</Text>
@@ -38,7 +67,15 @@ export default function DownloadedWallpapersScreen() {
   );
 }
 
-function WallpaperGridItem(wallpaper: DownloadedWallpaperPostType) {
+function WallpaperGridItem({
+  wallpaper,
+  isApplied,
+  applyWallpaper,
+}: {
+  wallpaper: DownloadedWallpaperPostType;
+  isApplied: boolean;
+  applyWallpaper: () => void;
+}) {
   return (
     <View className="pb-2" style={{flex: 0.5}}>
       <View className="flex flex-col h-[26rem]">
@@ -53,34 +90,41 @@ function WallpaperGridItem(wallpaper: DownloadedWallpaperPostType) {
           {/* <View className="z-10 flex-1 w-full h-full border rounded-lg border-foreground/10">
             <ImageView path={wallpaper.path} />
           </View> */}
-          <Button
-            variant={"ghost"}
-            size="icon"
-            className="absolute z-20 rounded bottom-1 right-1 bg-background/50"
-            onPress={() => {
-              WallpaperManager.setWallpaper(wallpaper.path);
-            }}>
-            <ImageIcon size={24} color="white" />
-          </Button>
-          <View className="absolute left-0 z-20 flex flex-row items-center gap-2 px-1 bottom-1">
-            {wallpaper.width !== null &&
-            wallpaper.height !== null &&
-            !isNaN(wallpaper.width) &&
-            !isNaN(wallpaper.height) ? (
-              <View className="flex flex-row items-center justify-center px-1.5 py-1 rounded bg-background/80">
-                <Text className="text-sm text-zinc-200">
-                  {wallpaper.width} x {wallpaper.height}
-                </Text>
-              </View>
-            ) : (
-              <></>
-            )}
-          </View>
+          {isApplied ? (
+            <Button
+              variant={"ghost"}
+              size={"md"}
+              className="absolute z-20 px-3 rounded bottom-1 right-1 bg-emerald-700/80"
+              disabled>
+              <CheckCircle size={20} color="white" />
+              <ButtonText>Applied</ButtonText>
+            </Button>
+          ) : (
+            <Button
+              variant={"ghost"}
+              size={"md"}
+              className="absolute z-20 px-3 rounded bottom-1 right-1 bg-background/80"
+              onPress={applyWallpaper}>
+              <ImageIcon size={20} color="white" />
+              <ButtonText>Set</ButtonText>
+            </Button>
+          )}
         </View>
         <Text numberOfLines={1} className="mt-2 font-semibold">
           {wallpaper.title}
         </Text>
-        <View className="flex flex-row gap-1 justify-center items-center mt-1.5">{/* second line info */}</View>
+        <View className="mt-1.5">
+          {wallpaper.width !== null &&
+          wallpaper.height !== null &&
+          !isNaN(wallpaper.width) &&
+          !isNaN(wallpaper.height) ? (
+            <Text className="text-zinc-500">
+              {wallpaper.width} x {wallpaper.height}
+            </Text>
+          ) : (
+            <></>
+          )}
+        </View>
       </View>
     </View>
   );

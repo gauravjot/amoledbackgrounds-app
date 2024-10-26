@@ -21,8 +21,8 @@ const TopBar = React.forwardRef<React.ElementRef<typeof View>, TopBarProps>(
               <View className="flex items-center justify-center size-7">
                 {showLoader ? <LoadingSpinner size={32} /> : <TailIcon width={28} height={28} />}
               </View>
-              <Text className="flex-1 text-lg font-bold">{title ?? "Amoled Backgrounds"}</Text>
-              <View>{children ?? <></>}</View>
+              {title && <Text className="flex-1 text-lg font-bold">{title}</Text>}
+              <View className={title ? "" : "flex-1"}>{children ?? <></>}</View>
             </View>
           </View>
         </LinearGradient>

@@ -24,6 +24,7 @@ import {router} from "expo-router";
 import {LinearGradient} from "expo-linear-gradient";
 import * as DownloadManager from "@/modules/download-manager";
 import {fadingPulseAnimation} from "@/lib/animations/fading_pulse";
+import {ToastAndroid} from "react-native";
 
 type DownloadState = {
   status: "idle" | "downloading" | "complete" | "error_finishing" | "error_starting";
@@ -113,6 +114,7 @@ export default function DownloadScreen() {
           width: wallpaper.image.width,
           height: wallpaper.image.height,
         });
+        ToastAndroid.show("Download complete", ToastAndroid.SHORT);
       } else {
         setDownloadState({status: "error_finishing", progress: null});
         // TODO: show some error message to user in toast
@@ -120,11 +122,16 @@ export default function DownloadScreen() {
       }
     });
     // wallpaper change listener
-    const wallpaperChangeListener = onChangeListener(e => setApplyState(e.success ? "applied" : "error"));
+    const wallpaperChangeListener = onChangeListener(e => {
+      setApplyState(e.success ? "applied" : "error");
+      ToastAndroid.show(e.success ? "Wallpaper applied" : "Failed to apply wallpaper", ToastAndroid.SHORT);
+    });
     // download progress listener
-    const downloadProgressListener = DownloadManager.downloadProgressListener(e =>
-      setDownloadState({status: "downloading", progress: e.progress}),
-    );
+    const downloadProgressListener = DownloadManager.downloadProgressListener(e => {
+      if (downloadState.status !== "complete") {
+        setDownloadState({status: "downloading", progress: e.progress});
+      }
+    });
 
     return () => {
       // When component is killed, clear all listeners
@@ -179,22 +186,25 @@ export default function DownloadScreen() {
                 <ButtonText>Download</ButtonText>
               </Button>
             ) : downloadState.status === "complete" && applyState !== "applied" ? (
-              <Button variant={"accent"} className="absolute z-30 rounded-full -top-6 right-4" onPress={applyWallpaper}>
+              <Button
+                variant={"emerald"}
+                className="absolute z-30 rounded-full -top-6 right-4"
+                onPress={applyWallpaper}>
                 <ImageIcon size={16} color="white" />
                 <ButtonText>Apply</ButtonText>
               </Button>
             ) : applyState === "applied" ? (
-              <Button variant={"accent"} className="absolute z-30 rounded-full -top-6 right-4" disabled>
+              <Button variant={"emerald"} className="absolute z-30 rounded-full -top-6 right-4" disabled>
                 <CheckCircle size={16} color="white" />
                 <ButtonText>Applied</ButtonText>
               </Button>
             ) : downloadState.status === "downloading" ? (
-              <Button variant={"accent"} className="absolute z-30 rounded-full -top-6 right-4" disabled>
+              <Button variant={"accent"} className="absolute z-30 px-0 pl-2 pr-4 rounded-full -top-6 right-4" disabled>
                 <LoadingSpinner />
                 <ButtonText>{downloadState.progress}%</ButtonText>
               </Button>
             ) : (
-              <Button variant={"accent"} className="absolute z-30 rounded-full -top-6 right-4" disabled>
+              <Button variant={"accent"} className="absolute z-30 px-2 rounded-full -top-6 right-4" disabled>
                 <LoadingSpinner />
               </Button>
             )}

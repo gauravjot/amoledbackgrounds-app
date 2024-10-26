@@ -13,6 +13,7 @@ const buttonVariants = cva("group flex items-center gap-2 justify-center rounded
       ghost: "active:bg-white/10",
       link: "active:underline",
       accent: "bg-accent active:bg-accent/90",
+      emerald: "bg-emerald-700 active:bg-emerald-800",
     },
     size: {
       default: "h-12 px-5",

@@ -47,9 +47,9 @@ export const getWallpapers = async (sort: SortOptions, after: string | undefined
           const image: WallpaperImageType = {
             url: htmlDecode(post.url),
             preview_url:
-              resolutions.length > 0 ? htmlDecode(resolutions[Math.max(resolutions.length - 3, 0)].url) : undefined, // get the 3rd last resolution
+              resolutions.length > 0 ? htmlDecode(resolutions[Math.max(resolutions.length - 4, 0)].url) : undefined, // get the 3rd last resolution
             preview_small_url:
-              resolutions.length > 0 ? htmlDecode(resolutions[Math.max(resolutions.length - 4, 0)].url) : undefined, // get the 4th last resolution
+              resolutions.length > 0 ? htmlDecode(resolutions[Math.max(resolutions.length - 5, 0)].url) : undefined, // get the 4th last resolution
             width: source.width,
             height: source.height,
           };
@@ -97,7 +97,7 @@ export const getWallpapers = async (sort: SortOptions, after: string | undefined
  * @param post
  * @returns
  */
-function skipPost(post: {over_18: any; title: string; link_flair_text?: string; url: string}) {
+export function skipPost(post: {over_18: any; title: string; link_flair_text?: string; url: string}) {
   const isImage = post.url.endsWith(".jpg") || post.url.endsWith(".png") || post.url.endsWith(".jpeg");
   if (!isImage) return true;
 
@@ -143,7 +143,7 @@ function getURIFromSort(sort: SortOptions) {
 /**
  * Decode HTML. E.g. &amp; to &
  */
-function htmlDecode(input: string): string {
+export function htmlDecode(input: string): string {
   let output = input.replace(/&amp;/g, "&");
   return output;
 }
@@ -151,6 +151,6 @@ function htmlDecode(input: string): string {
 /**
  * Clean titles by removing parenthesis and data within
  */
-function removeParenthesisData(input: string): string {
+export function removeParenthesisData(input: string): string {
   return input.replace(/[\[\(].*?[\]\)]/g, "").trim();
 }
