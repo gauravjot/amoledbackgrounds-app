@@ -1,4 +1,4 @@
-import {FlatList, View} from "react-native";
+import {FlatList, Image, View} from "react-native";
 import React from "react";
 import {Text} from "@/components/ui/Text";
 import {SafeAreaView} from "react-native-safe-area-context";
@@ -8,7 +8,6 @@ import Animated, {useAnimatedStyle, withRepeat, withSequence, withTiming} from "
 import {Button} from "@/components/ui/Button";
 import {ImageIcon} from "lucide-react-native";
 import * as WallpaperManager from "@/modules/wallpaper-manager";
-import {ImageView} from "@/modules/image-view";
 
 export default function DownloadsScreen() {
   const downloadedWallpapersStore = useDownloadedWallpapersStore();
@@ -66,13 +65,13 @@ function WallpaperGridItem(wallpaper: DownloadedWallpaperPostType) {
           <Animated.View
             style={fadingPulseAnimation}
             className="absolute top-0 left-0 z-0 w-full h-full rounded-lg bg-foreground/20"></Animated.View>
-          {/* <Image
+          <Image
             className="z-10 flex-1 object-contain w-full h-full border rounded-lg border-foreground/10"
-            source={{uri: ""}}
-          /> */}
-          <View className="z-10 flex-1 w-full h-full border rounded-lg border-foreground/10">
+            source={{uri: `file://${wallpaper.path}`}}
+          />
+          {/* <View className="z-10 flex-1 w-full h-full border rounded-lg border-foreground/10">
             <ImageView path={wallpaper.path} />
-          </View>
+          </View> */}
           <Button
             variant={"ghost"}
             size="icon"
