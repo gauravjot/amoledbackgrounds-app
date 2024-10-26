@@ -1,18 +1,26 @@
-import {Tabs} from "expo-router";
-import React, {useEffect, useState} from "react";
+import {router, Tabs} from "expo-router";
+import React from "react";
 import {FolderDown, Home, LucideIcon, Search, Settings} from "lucide-react-native";
 import {View} from "react-native";
 import {Button, ButtonText} from "@/components/ui/Button";
 import {NavigationHelpers, ParamListBase, TabNavigationState} from "@react-navigation/native";
-import {SafeAreaView} from "react-native-safe-area-context";
 import {BlurView} from "expo-blur";
 import {LinearGradient} from "expo-linear-gradient";
+
+const TABS: {
+  [key: string]: {name: string; Icon: LucideIcon; sort: number};
+} = {
+  index: {name: "Home", Icon: Home, sort: 0},
+  search: {name: "Search", Icon: Search, sort: 1},
+  downloaded: {name: "Downloads", Icon: FolderDown, sort: 2},
+  settings: {name: "Settings", Icon: Settings, sort: 3},
+};
 
 export default function TabLayout() {
   return (
     <View className="flex-1 bg-background">
       <Tabs
-        tabBar={props => <TapBar state={props.state} descriptors={props.descriptors} navigation={props.navigation} />}
+        tabBar={props => <TabBar state={props.state} descriptors={props.descriptors} navigation={props.navigation} />}
         screenOptions={{
           headerShown: false,
         }}></Tabs>
@@ -20,7 +28,7 @@ export default function TabLayout() {
   );
 }
 
-function TapBar({
+function TabBar({
   state,
   descriptors,
   navigation,
@@ -29,34 +37,10 @@ function TapBar({
   descriptors: any;
   navigation: NavigationHelpers<ParamListBase, any>;
 }) {
-  const dataMap: {
-    [key: string]: {name: string; Icon: LucideIcon; sort: number};
-  } = {
-    index: {
-      name: "Home",
-      Icon: Home,
-      sort: 0,
-    },
-    search: {
-      name: "Search",
-      Icon: Search,
-      sort: 1,
-    },
-    downloads: {
-      name: "Downloads",
-      Icon: FolderDown,
-      sort: 2,
-    },
-    settings: {
-      name: "Settings",
-      Icon: Settings,
-      sort: 3,
-    },
-  };
+  const [tabs, setTabs] = React.useState<React.JSX.Element[]>([]);
 
-  const [tabs, setTabs] = useState<React.JSX.Element[]>([]);
-
-  useEffect(() => {
+  // Produce JSX for the tabs
+  React.useEffect(() => {
     setTabs([]);
     let tabList: {Tab: React.JSX.Element; label: string}[] = [];
     for (let index = 0; index < state.routes.length; index++) {
@@ -72,18 +56,17 @@ function TapBar({
       const isFocused = state.index === index;
 
       const onPress = () => {
-        const event = navigation.emit({
+        navigation.emit({
           type: "tabPress",
           target: route.key,
           canPreventDefault: true,
         });
-
         if (!isFocused) {
-          navigation.navigate(route.name);
+          router.replace({pathname: `/(tabs)/${route.key}` as any});
         }
       };
-      const name = dataMap[label].name;
-      const Icon = dataMap[label].Icon;
+
+      const Icon = TABS[label].Icon;
       const TabBtn = (
         <Button
           key={index}
@@ -96,7 +79,7 @@ function TapBar({
             size={"sm"}
             numberOfLines={1}
             className={(isFocused ? "text-foreground" : "text-zinc-500") + " font-medium"}>
-            {name}
+            {TABS[label].name}
           </ButtonText>
         </Button>
       );
@@ -104,7 +87,7 @@ function TapBar({
     }
     // Sort
     tabList.sort((a, b) => {
-      return dataMap[a.label].sort - dataMap[b.label].sort;
+      return TABS[a.label].sort - TABS[b.label].sort;
     });
     setTabs(tabList.map(s => s.Tab));
   }, [state]);

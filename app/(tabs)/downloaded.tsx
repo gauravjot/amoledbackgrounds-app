@@ -4,15 +4,14 @@ import {Text} from "@/components/ui/Text";
 import {SafeAreaView} from "react-native-safe-area-context";
 import {DownloadedWallpaperPostType, useDownloadedWallpapersStore} from "@/store/downloaded_wallpapers";
 import TopBar from "@/components/ui/TopBar";
-import Animated, {useAnimatedStyle, withRepeat, withSequence, withTiming} from "react-native-reanimated";
+import Animated from "react-native-reanimated";
 import {Button} from "@/components/ui/Button";
 import {ImageIcon} from "lucide-react-native";
 import * as WallpaperManager from "@/modules/wallpaper-manager";
+import {fadingPulseAnimation} from "@/lib/animations/fading_pulse";
 
-export default function DownloadsScreen() {
-  const downloadedWallpapersStore = useDownloadedWallpapersStore();
-
-  const posts = downloadedWallpapersStore.files;
+export default function DownloadedWallpapersScreen() {
+  const posts = useDownloadedWallpapersStore().files;
 
   return (
     <SafeAreaView className="bg-background">
@@ -36,32 +35,12 @@ export default function DownloadsScreen() {
 }
 
 function WallpaperGridItem(wallpaper: DownloadedWallpaperPostType) {
-  // Animations
-  const fadingPulseAnimation = useAnimatedStyle(() => {
-    return {
-      opacity: withRepeat(
-        withSequence(
-          withTiming(0.5, {
-            duration: 1000,
-          }),
-          withTiming(1, {
-            duration: 1000,
-          }),
-          withTiming(0.5, {
-            duration: 1000,
-          }),
-        ),
-        -1,
-      ),
-    };
-  });
-
   return (
     <View className="pb-2" style={{flex: 0.5}}>
       <View className="flex flex-col h-[26rem]">
         <View className="relative flex-1 web:block">
           <Animated.View
-            style={fadingPulseAnimation}
+            style={fadingPulseAnimation(3000)}
             className="absolute top-0 left-0 z-0 w-full h-full rounded-lg bg-foreground/20"></Animated.View>
           <Image
             className="z-10 flex-1 object-contain w-full h-full border rounded-lg border-foreground/10"

@@ -1,28 +1,29 @@
-import {FlatList, View, Image, Pressable} from "react-native";
+import {FlatList, View} from "react-native";
 import {Text} from "@/components/ui/Text";
 import {SafeAreaView} from "react-native-safe-area-context";
 import HomeTopBar from "@/components/HomeTopBar";
-import {useEffect, useState} from "react";
+import React from "react";
 import {getWallpapers} from "@/lib/services/wallpaper_grid_service";
 import {useSortStore} from "@/store/sort";
 import {useMutation} from "@tanstack/react-query";
 import {PaginationType, WallpaperPostType} from "@/lib/services/wallpaper_type";
-import {ArrowUp, CircleX, MessageSquareMore} from "lucide-react-native";
-import {timeSince} from "@/lib/utils/time_since";
+import {CircleX} from "lucide-react-native";
 import {Button, ButtonText} from "@/components/ui/Button";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
-import {PREVIEW_USE_LOWER_QUALITY} from "@/appconfig";
-import Animated, {useAnimatedStyle, withRepeat, withSequence, withTiming} from "react-native-reanimated";
-import {router} from "expo-router";
+import Animated from "react-native-reanimated";
+import OnlineWallpaperGridItem from "@/components/OnlineWallpaperGridItem";
+import {fadingPulseAnimation} from "@/lib/animations/fading_pulse";
+
+type PostsType = {
+  posts: WallpaperPostType[];
+  pagination: PaginationType;
+} | null;
 
 export default function HomeScreen() {
-  const [posts, setPosts] = useState<{
-    posts: WallpaperPostType[];
-    pagination: PaginationType;
-  } | null>();
+  const [posts, setPosts] = React.useState<PostsType>();
 
   // Lock to prevent multiple fetches
-  const [isMutationLock, setIsMutationLock] = useState(false);
+  const [isMutationLock, setIsMutationLock] = React.useState(false);
 
   // Sort store
   const sortStore = useSortStore();
@@ -65,32 +66,12 @@ export default function HomeScreen() {
   });
 
   // Trigger fetch on sort change
-  useEffect(() => {
+  React.useEffect(() => {
     if (wallpaperMutation.isPending) {
     }
     setPosts(null);
     wallpaperMutation.mutate();
   }, [sortStore.sort]);
-
-  // Animations
-  const fadingTextAnimation = useAnimatedStyle(() => {
-    return {
-      opacity: withRepeat(
-        withSequence(
-          withTiming(0.5, {
-            duration: 1500,
-          }),
-          withTiming(1, {
-            duration: 1500,
-          }),
-          withTiming(0.5, {
-            duration: 1500,
-          }),
-        ),
-        -1,
-      ),
-    };
-  });
 
   return (
     <SafeAreaView className="bg-background">
@@ -136,7 +117,7 @@ export default function HomeScreen() {
           className="z-0 w-full px-3 pt-24"
           columnWrapperClassName="gap-4"
           contentContainerClassName="gap-4"
-          renderItem={({item}) => <WallpaperGridItem {...item} />}
+          renderItem={({item}) => <OnlineWallpaperGridItem {...item} />}
           ListFooterComponent={() => {
             if (posts && posts.pagination.after === null) {
               return (
@@ -147,7 +128,7 @@ export default function HomeScreen() {
             } else if ((posts?.pagination.page_number ?? 0) > 0) {
               return (
                 <View className="flex flex-col items-center justify-start w-full mb-16 h-72">
-                  <Animated.View style={fadingTextAnimation}>
+                  <Animated.View style={fadingPulseAnimation(4500)}>
                     <Text className="pt-12 text-sm text-zinc-200">Loading more...</Text>
                   </Animated.View>
                   <Button
@@ -168,82 +149,5 @@ export default function HomeScreen() {
         />
       </View>
     </SafeAreaView>
-  );
-}
-
-function WallpaperGridItem(wallpaper: WallpaperPostType) {
-  const thumbnail: string =
-    (PREVIEW_USE_LOWER_QUALITY ? wallpaper.image.preview_small_url : null) ??
-    wallpaper.image.preview_url ??
-    wallpaper.image.url;
-
-  // Animations
-  const fadingPulseAnimation = useAnimatedStyle(() => {
-    return {
-      opacity: withRepeat(
-        withSequence(
-          withTiming(0.5, {
-            duration: 1000,
-          }),
-          withTiming(1, {
-            duration: 1000,
-          }),
-          withTiming(0.5, {
-            duration: 1000,
-          }),
-        ),
-        -1,
-      ),
-    };
-  });
-
-  return (
-    <View className="pb-2" style={{flex: 0.5}}>
-      <Pressable
-        onPress={() => {
-          router.push({pathname: "/download", params: {wallpaper: JSON.stringify(wallpaper)}});
-        }}>
-        <View className="flex flex-col h-[26rem]">
-          <View className="relative flex-1 web:block">
-            <Animated.View
-              style={fadingPulseAnimation}
-              className="absolute top-0 left-0 z-0 w-full h-full rounded-lg bg-foreground/20"></Animated.View>
-            <Image
-              className="z-10 flex-1 object-contain w-full h-full border rounded-lg border-foreground/10"
-              source={{uri: thumbnail}}
-            />
-            {wallpaper.flair && (
-              <View className="absolute z-20 top-2 right-2">
-                <Text className="inline px-1 text-xs font-semibold uppercase rounded bg-emerald-700">
-                  {wallpaper.flair}
-                </Text>
-              </View>
-            )}
-            <View className="absolute left-0 z-20 flex flex-row items-center gap-2 px-1 bottom-1">
-              <View className="flex flex-row items-center justify-center gap-1 p-1 rounded bg-background/80">
-                <ArrowUp size={16} color="white" />
-                <Text className="text-sm text-zinc-200 pe-1">{wallpaper.score}</Text>
-              </View>
-              <View className="flex-1"></View>
-              <View className="flex flex-row items-center justify-center px-1.5 py-1 rounded bg-background/80">
-                <Text className="text-sm text-zinc-200">
-                  {wallpaper.image.width} x {wallpaper.image.height}
-                </Text>
-              </View>
-            </View>
-          </View>
-          <Text numberOfLines={1} className="mt-2 font-semibold">
-            {wallpaper.title}
-          </Text>
-          <View className="flex flex-row gap-1 justify-center items-center mt-1.5">
-            <MessageSquareMore size={16} color="gray" />
-            <Text className="text-sm text-zinc-400">{wallpaper.comments}</Text>
-            <Text numberOfLines={1} className="flex-1 text-sm text-zinc-400">
-              &nbsp;&bull;&nbsp; {timeSince(wallpaper.created_utc)}
-            </Text>
-          </View>
-        </View>
-      </Pressable>
-    </View>
   );
 }

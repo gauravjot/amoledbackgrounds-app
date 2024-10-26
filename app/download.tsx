@@ -1,16 +1,10 @@
-import {Image, Platform, Pressable, View} from "react-native";
-import React, {useEffect} from "react";
+import {Image, Pressable, View} from "react-native";
+import React from "react";
 import {WallpaperPostType} from "@/lib/services/wallpaper_type";
-import {Link, useLocalSearchParams} from "expo-router";
+import {useLocalSearchParams} from "expo-router";
 import {Text} from "@/components/ui/Text";
 import {SafeAreaView} from "react-native-safe-area-context";
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withRepeat,
-  withSequence,
-  withTiming,
-} from "react-native-reanimated";
+import Animated, {useSharedValue, withTiming} from "react-native-reanimated";
 import {
   ArrowDownCircle,
   ArrowLeft,
@@ -23,67 +17,65 @@ import {
 import {Button, ButtonText} from "@/components/ui/Button";
 import * as WebBrowser from "expo-web-browser";
 import * as FileSystem from "expo-file-system";
-import {shareAsync} from "expo-sharing";
-import {useSettingsStore} from "@/store/settings";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import {useDownloadedWallpapersStore} from "@/store/downloaded_wallpapers";
-import {DownloadedWallpaperPostType} from "../store/downloaded_wallpapers";
 import {setWallpaper, onChangeListener} from "@/modules/wallpaper-manager";
 import {router} from "expo-router";
 import {BlurView} from "expo-blur";
 import {LinearGradient} from "expo-linear-gradient";
 import * as DownloadManager from "@/modules/download-manager";
+import {fadingPulseAnimation} from "@/lib/animations/fading_pulse";
+
+type DownloadState = {
+  status: "idle" | "downloading" | "complete" | "error_finishing" | "error_starting";
+  progress: number | null;
+};
+
+type WallpaperApplyState = "idle" | "applying" | "applied" | "error";
 
 export default function DownloadScreen() {
   const params = useLocalSearchParams();
-  const [isDownloading, setIsDownloading] = React.useState(false);
-  const [isDownloaded, setIsDownloaded] = React.useState(false);
-  const [isDownloadFailed, setIsDownloadFailed] = React.useState(false);
-  const [downloadProgress, setDownloadProgress] = React.useState(0);
-  const [isWallpaperApplying, setIsWallpaperApplying] = React.useState(false);
-  const [isWallpaperApplied, setIsWallpaperApplied] = React.useState(false);
-  const [downloadedFile, setDownloadedFile] = React.useState<DownloadedWallpaperPostType | null>(null);
+  const [downloadState, setDownloadState] = React.useState<DownloadState>({status: "idle", progress: null});
+  const [applyState, setApplyState] = React.useState<WallpaperApplyState>("idle");
+  const [fileSystemPath, setFileSystemPath] = React.useState<string | null>(null);
 
+  // Wallpaper information
   const wallpaper = JSON.parse(params["wallpaper"] as string) as WallpaperPostType;
-  const filename = `${wallpaper.title.replaceAll(" ", "_")}_-_${wallpaper.image.width}x${wallpaper.image.height}_${
-    wallpaper.id
-  }_amoled_droidheat`.replaceAll("%", "");
+  const filename =
+    `${wallpaper.title.replace(/[\/\\#,+()|~%'":*?<>{}]/g, "").replaceAll(" ", "_")}` +
+    `_-_${wallpaper.image.width}x${wallpaper.image.height}_${wallpaper.id}_amoled_droidheat`;
   const file_extension = wallpaper.image.url.split(".").pop() || ".png";
 
-  const settingsStore = useSettingsStore();
-  const downloadedStore = useDownloadedWallpapersStore();
+  // Store to save downloaded wallpapers to
+  const store = useDownloadedWallpapersStore();
 
-  console.log("Has storage permission ", DownloadManager.hasPermissionForStorage());
-  console.log(wallpaper);
-
-  // Animations
-  const fadingPulseAnimation = useAnimatedStyle(() => {
-    return {
-      opacity: withRepeat(
-        withSequence(
-          withTiming(0.5, {
-            duration: 1000,
-          }),
-          withTiming(1, {
-            duration: 1000,
-          }),
-          withTiming(0.5, {
-            duration: 1000,
-          }),
-        ),
-        -1,
-      ),
-    };
-  });
   // Animations
   const animateOpacity = useSharedValue(1);
 
-  const showComments = () => {
-    console.log("Show Comments");
-  };
+  // On start of the screen
+  // check if current wallpaper is downloaded
+  React.useEffect(() => {
+    const saved_file = store.getFile(filename);
+    if (saved_file) {
+      // Check if file exists in file system
+      FileSystem.getInfoAsync(saved_file.path)
+        .then(() => {
+          setDownloadState({status: "complete", progress: null});
+          setFileSystemPath(saved_file.path);
+        })
+        .catch(() => {
+          store.removeFile(filename);
+        });
+    }
+  }, []);
 
-  const fullScreenWallpaperToggle = () => {
-    console.log("Toggle Fullscreen");
+  // Toggle to show comments dialog
+  function showComments() {
+    console.log("Show Comments");
+  }
+
+  // Toggle to hide/show the bottom info panel
+  function fullScreenWallpaperToggle() {
     if (animateOpacity.value === 0) {
       animateOpacity.value = withTiming(1, {
         duration: 200,
@@ -93,93 +85,71 @@ export default function DownloadScreen() {
         duration: 500,
       });
     }
-  };
+  }
 
-  const downloadUsingNative = () => {
+  // Download wallpaper using native download manager
+  function downloadUsingNative() {
     try {
       const downloading = DownloadManager.downloadImage(wallpaper.image.url, filename, file_extension);
       if (downloading) {
-        setIsDownloading(true);
+        setDownloadState({status: "downloading", progress: 0});
       }
     } catch (e) {
+      // TODO: Log this exception
       console.log(e);
+      setDownloadState({status: "error_starting", progress: null});
     }
-  };
+  }
 
-  useEffect(() => {
+  // Listeners
+  React.useEffect(() => {
     // download complete listener
     const downloadCompleteListener = DownloadManager.downloadCompleteListener(e => {
-      setIsDownloading(false);
-      setIsDownloaded(e.success);
       if (e.success) {
-        saveToDownloadedStore(e.path);
-        setDownloadedFile({
+        setDownloadState({status: "complete", progress: null});
+        setFileSystemPath(e.path);
+        store.addFile({
           title: wallpaper.title,
           path: e.path,
           width: wallpaper.image.width,
           height: wallpaper.image.height,
         });
       } else {
-        setIsDownloadFailed(true);
+        setDownloadState({status: "error_finishing", progress: null});
+        // TODO: show some error message to user in toast
         console.log("Download failed");
       }
     });
-
     // wallpaper change listener
-    const wallpaperChangeListener = onChangeListener(e => {
-      if (e.success) {
-        setIsWallpaperApplied(true);
-        setIsWallpaperApplying(false);
-      } else {
-        setIsWallpaperApplied(false);
-        setIsWallpaperApplying(false);
-      }
-    });
-
+    const wallpaperChangeListener = onChangeListener(e => setApplyState(e.success ? "applied" : "error"));
     // download progress listener
-    const downloadProgressListener = DownloadManager.downloadProgressListener(e => {
-      setDownloadProgress(e.progress);
-    });
+    const downloadProgressListener = DownloadManager.downloadProgressListener(e =>
+      setDownloadState({status: "downloading", progress: e.progress}),
+    );
 
     return () => {
+      // When component is killed, clear all listeners
       downloadCompleteListener.remove();
       wallpaperChangeListener.remove();
       downloadProgressListener.remove();
     };
   }, []);
 
-  const applyWallpaper = () => {
+  // Apply wallpaper
+  function applyWallpaper() {
     try {
-      setIsWallpaperApplying(true);
-      setWallpaper(downloadedFile?.path as string);
+      setApplyState("applying");
+      setWallpaper(fileSystemPath as string);
     } catch (e) {
       // TODO: Log this error somewhere
       console.log(e);
     }
-  };
-
-  // check if current wallpaper is downloaded
-  useEffect(() => {
-    const saved_file = downloadedStore.getFile(filename);
-    if (saved_file) {
-      FileSystem.getInfoAsync(saved_file.path)
-        .then(() => {
-          setIsDownloaded(true);
-          setDownloadedFile(saved_file);
-        })
-        .catch(e => {
-          setIsDownloaded(false);
-          downloadedStore.removeFile(filename);
-        });
-    } else {
-      setIsDownloaded(false);
-    }
-  }, []);
+  }
 
   return (
     <View className="relative h-screen bg-background">
       <Animated.View
-        style={fadingPulseAnimation}
+        style={fadingPulseAnimation(3000)}
         className="absolute top-0 left-0 z-0 w-full h-full bg-foreground/20"></Animated.View>
       <Image className="z-10 flex-1 object-contain w-full h-full" source={{uri: wallpaper.image.url}} />
       <View className="absolute top-0 left-0 right-0 z-30 w-full">
@@ -206,7 +176,7 @@ export default function DownloadScreen() {
             experimentalBlurMethod={"dimezisBlurView"}
           />
           <LinearGradient colors={["rgba(0,0,0,0.1)", "black"]} className="relative z-10 p-4">
-            {!isDownloaded && !isDownloading ? (
+            {downloadState.status !== "complete" && downloadState.status !== "downloading" ? (
               <Button
                 variant={"accent"}
                 className="absolute z-30 rounded-full -top-6 right-4"
@@ -214,20 +184,20 @@ export default function DownloadScreen() {
                 <ArrowDownCircle size={16} color="white" />
                 <ButtonText>Download</ButtonText>
               </Button>
-            ) : isDownloaded && !isWallpaperApplying && !isWallpaperApplied ? (
+            ) : downloadState.status === "complete" && applyState !== "applied" ? (
               <Button variant={"accent"} className="absolute z-30 rounded-full -top-6 right-4" onPress={applyWallpaper}>
                 <ImageIcon size={16} color="white" />
                 <ButtonText>Apply</ButtonText>
               </Button>
-            ) : isDownloaded && !isWallpaperApplying && isWallpaperApplied ? (
+            ) : applyState === "applied" ? (
               <Button variant={"accent"} className="absolute z-30 rounded-full -top-6 right-4" disabled>
                 <CheckCircle size={16} color="white" />
                 <ButtonText>Applied</ButtonText>
               </Button>
-            ) : isDownloading ? (
+            ) : downloadState.status === "downloading" ? (
               <Button variant={"accent"} className="absolute z-30 rounded-full -top-6 right-4" disabled>
                 <LoadingSpinner />
-                <ButtonText>Downloading {downloadProgress}%</ButtonText>
+                <ButtonText>{downloadState.progress}%</ButtonText>
               </Button>
             ) : (
               <Button variant={"accent"} className="absolute z-30 rounded-full -top-6 right-4" disabled>
@@ -292,13 +262,4 @@ export default function DownloadScreen() {
       </SafeAreaView>
     </View>
   );
-
-  function saveToDownloadedStore(path: string) {
-    downloadedStore.addFile({
-      title: wallpaper.title,
-      path: path,
-      width: wallpaper.image.width,
-      height: wallpaper.image.height,
-    });
-  }
 }
