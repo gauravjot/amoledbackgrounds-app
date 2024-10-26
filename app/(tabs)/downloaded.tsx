@@ -15,21 +15,25 @@ export default function DownloadedWallpapersScreen() {
 
   return (
     <SafeAreaView className="bg-background">
-      <TopBar showLoader={false} title="Downloads"></TopBar>
-      <FlatList
-        numColumns={2}
-        keyExtractor={item => item.path}
-        data={posts}
-        className="z-0 w-full px-3 py-3"
-        columnWrapperClassName="gap-4"
-        contentContainerClassName="gap-4"
-        renderItem={({item}) => <WallpaperGridItem {...item} />}
-        ListFooterComponent={() => (
-          <View className="flex items-center justify-start w-full mb-16 h-52">
-            <Text className="px-4 pt-12 text-sm text-zinc-400">End of posts for current filter</Text>
-          </View>
-        )}
-      />
+      <View className="h-screen bg-background">
+        <View className="absolute top-0 z-10 w-full">
+          <TopBar showLoader={false} title="Downloads"></TopBar>
+        </View>
+        <FlatList
+          numColumns={2}
+          keyExtractor={item => item.path}
+          data={posts}
+          className="z-0 w-full px-3 pt-24"
+          columnWrapperClassName="gap-4"
+          contentContainerClassName="gap-4"
+          renderItem={({item}) => <WallpaperGridItem {...item} />}
+          ListFooterComponent={() => (
+            <View className="flex items-center justify-start w-full mb-16 h-52">
+              <Text className="px-4 pt-12 text-sm text-zinc-400">End of posts for current filter</Text>
+            </View>
+          )}
+        />
+      </View>
     </SafeAreaView>
   );
 }

@@ -1,10 +1,9 @@
-import {router, Tabs} from "expo-router";
+import {Tabs} from "expo-router";
 import React from "react";
 import {FolderDown, Home, LucideIcon, Search, Settings} from "lucide-react-native";
 import {View} from "react-native";
 import {Button, ButtonText} from "@/components/ui/Button";
 import {NavigationHelpers, ParamListBase, TabNavigationState} from "@react-navigation/native";
-import {BlurView} from "expo-blur";
 import {LinearGradient} from "expo-linear-gradient";
 
 const TABS: {
@@ -62,7 +61,7 @@ function TabBar({
           canPreventDefault: true,
         });
         if (!isFocused) {
-          router.replace({pathname: `/(tabs)/${route.key}` as any});
+          navigation.navigate(route.name);
         }
       };
 
@@ -94,13 +93,8 @@ function TabBar({
 
   return (
     <>
-      <BlurView
-        className="absolute bottom-0 left-0 right-0 h-16"
-        intensity={20}
-        experimentalBlurMethod={"dimezisBlurView"}
-      />
       <LinearGradient colors={["rgba(0,0,0,0.25)", "black"]} className="absolute bottom-0 left-0 right-0 ">
-        <View className="flex flex-row h-16 gap-1 px-4 bg-background/20">
+        <View className="flex flex-row h-16 gap-1 px-4 bg-background/80">
           {tabs.map(tab => {
             return tab;
           })}

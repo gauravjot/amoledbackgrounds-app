@@ -21,7 +21,6 @@ import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import {useDownloadedWallpapersStore} from "@/store/downloaded_wallpapers";
 import {setWallpaper, onChangeListener} from "@/modules/wallpaper-manager";
 import {router} from "expo-router";
-import {BlurView} from "expo-blur";
 import {LinearGradient} from "expo-linear-gradient";
 import * as DownloadManager from "@/modules/download-manager";
 import {fadingPulseAnimation} from "@/lib/animations/fading_pulse";
@@ -41,9 +40,9 @@ export default function DownloadScreen() {
 
   // Wallpaper information
   const wallpaper = JSON.parse(params["wallpaper"] as string) as WallpaperPostType;
-  const filename =
-    `${wallpaper.title.replace(/[\/\\#,+()|~%'":*?<>{}]/g, "").replaceAll(" ", "_")}` +
-    `_-_${wallpaper.image.width}x${wallpaper.image.height}_${wallpaper.id}_amoled_droidheat`;
+  const filename = `${wallpaper.title.replace(/[\/\\#,+()|~%'":*?<>{}]/g, "").replaceAll(" ", "_")}_-_${
+    wallpaper.id
+  }_amoled_droidheat`;
   const file_extension = wallpaper.image.url.split(".").pop() || ".png";
 
   // Store to save downloaded wallpapers to
@@ -170,11 +169,6 @@ export default function DownloadScreen() {
         <Pressable className="relative z-0 flex-1" onPress={fullScreenWallpaperToggle}></Pressable>
 
         <Animated.View className="relative w-full bg-background/80" style={{opacity: animateOpacity}}>
-          <BlurView
-            className="absolute top-0 bottom-0 left-0 right-0 z-0 w-full h-full"
-            intensity={20}
-            experimentalBlurMethod={"dimezisBlurView"}
-          />
           <LinearGradient colors={["rgba(0,0,0,0.1)", "black"]} className="relative z-10 p-4">
             {downloadState.status !== "complete" && downloadState.status !== "downloading" ? (
               <Button

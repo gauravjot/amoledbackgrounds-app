@@ -3,7 +3,7 @@ import {Text} from "@/components/ui/Text";
 import {SafeAreaView} from "react-native-safe-area-context";
 import HomeTopBar from "@/components/HomeTopBar";
 import React from "react";
-import {getWallpapers} from "@/lib/services/wallpaper_grid_service";
+import {getWallpapers} from "@/lib/services/get_wallpapers";
 import {useSortStore} from "@/store/sort";
 import {useMutation} from "@tanstack/react-query";
 import {PaginationType, WallpaperPostType} from "@/lib/services/wallpaper_type";

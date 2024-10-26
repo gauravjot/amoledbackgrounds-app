@@ -14,8 +14,6 @@ export const getWallpapers = async (sort: SortOptions, after: string | undefined
     `&count=${WALLPAPERS_POST_LIMIT * (page_number ?? 1)}`,
   );
 
-  console.log(url);
-
   return await axios.get(url).then(response => {
     // Process response to get the data we need
     const posts: WallpaperPostType[] = [];

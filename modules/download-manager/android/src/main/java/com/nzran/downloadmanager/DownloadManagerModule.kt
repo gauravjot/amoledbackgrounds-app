@@ -60,7 +60,7 @@ class DownloadManagerModule : Module() {
     Events("onDownloadComplete", "onDownloadProgress")
 
     // Function to get downloaded files
-    Function("getDownloadedFiles") {
+    Function("getDownloadedFiles") { matchNameStr: String ->
       val result = ArrayList<HashMap<String, String>>()
       val contentResolver: ContentResolver = context.getContentResolver()
       val projection = arrayOf(
@@ -72,7 +72,7 @@ class DownloadManagerModule : Module() {
       )
       val selection = ""
       val selectionArgs = arrayOf<String>()
-      val sortOrder = "${MediaStore.Images.Media.DATE_ADDED} DESC"
+      val sortOrder = "${MediaStore.Images.Media.DATE_ADDED} ASC"
 
       try {
         val cursor = contentResolver.query(
@@ -85,10 +85,15 @@ class DownloadManagerModule : Module() {
         if (cursor != null) {
           while (cursor.moveToNext()) {
             val name = cursor.getString(cursor.getColumnIndex(MediaStore.Images.Media.DISPLAY_NAME))
+            if (matchNameStr.isNotEmpty() && !name.contains(matchNameStr)) {
+              continue
+            }
             val path = cursor.getString(cursor.getColumnIndex(MediaStore.Images.Media.RELATIVE_PATH))
             val fileMap = HashMap<String, String>()
             fileMap["name"] = name
             fileMap["path"] = "/storage/emulated/0/" + path + name
+            fileMap["width"] = cursor.getString(cursor.getColumnIndex(MediaStore.Images.Media.WIDTH))
+            fileMap["height"] = cursor.getString(cursor.getColumnIndex(MediaStore.Images.Media.HEIGHT))
             result.add(fileMap)
           }
           cursor.close()

@@ -35,42 +35,29 @@ export const useDownloadedWallpapersStore = create<DownloadedWallpaperStore>((se
 }));
 
 const getDownloadedWallpapers = async () => {
-  const files = DownloadManager.getDownloadedFiles();
+  const files = DownloadManager.getDownloadedFiles("_amoled_droidheat");
   const list: DownloadedWallpaperPostType[] = [];
 
   for (let i = 0; i < files.length; i++) {
     const file = files[i];
-    if (file.name.includes("amoled_droidheat")) {
-      let name = file.name.replace("_amoled_droidheat", "");
-      // remove extension
-      name = name.split(".").slice(0, -1).join(".");
-      let id = name.split("_").pop();
-      let width: number | null = null;
-      let height: number | null = null;
-      name = name
-        .replace(id || "", "")
-        .replace("_t3_", "")
-        // trim any number of trailing underscores
-        .replace(/_+$/, "");
-      let resolution = name.split("_").pop() || "";
-      width = parseInt(resolution.split("x")[0]);
-      height = parseInt(resolution.split("x")[1]);
-
-      if (isNaN(width) || isNaN(height)) {
-        // Resolution was not present in name
-        name = name.replaceAll("_", " ");
-      } else {
-        // Remove resolution from name
-        name = name.replace(`_${resolution}`, "");
-      }
-
-      list.push({
-        title: name.replace(/_/g, " ").replace(/-/g, " ").replace(/_/g, " ").trim(),
-        path: file.path,
-        width: width,
-        height: height,
-      });
+    // Two possible formats
+    // 1. name_t3_[id]_amoled_droidheat.jpg
+    // 2. name_-_[id]_amoled_droidheat.jpg
+    let name = file.name.replace("_amoled_droidheat", "");
+    // remove extension
+    name = name.split(".").slice(0, -1).join(".");
+    if (name.includes("_t3_")) {
+      name = name.split("_t3_")[0];
+    } else {
+      name = name.split("_-_")[0];
     }
+
+    list.push({
+      title: name.replace(/_/g, " ").replace(/_/g, " ").trim(),
+      path: file.path,
+      width: parseInt(file.width),
+      height: parseInt(file.height),
+    });
   }
   return list;
 };

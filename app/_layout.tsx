@@ -9,6 +9,7 @@ import {QueryClient, QueryClientProvider} from "@tanstack/react-query";
 import {DarkTheme, ThemeProvider} from "@react-navigation/native";
 import {useSettingsStore} from "@/store/settings";
 import {useDownloadedWallpapersStore} from "@/store/downloaded_wallpapers";
+import {Platform} from "react-native";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -22,7 +23,9 @@ export default function RootLayout() {
   const downloadedStore = useDownloadedWallpapersStore();
   useEffect(() => {
     settingsStore.initialize();
-    downloadedStore.initialize();
+    if (Platform.OS === "android") {
+      downloadedStore.initialize();
+    }
   }, []);
 
   // Fonts
@@ -50,7 +53,7 @@ export default function RootLayout() {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider value={DarkTheme}>
-        <Stack screenOptions={{headerShown: false}} />
+        <Stack initialRouteName="(tabs)" screenOptions={{headerShown: false}} />
       </ThemeProvider>
     </QueryClientProvider>
   );

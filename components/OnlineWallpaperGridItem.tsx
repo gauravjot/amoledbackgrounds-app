@@ -5,21 +5,23 @@ import {ArrowUp, MessageSquareMore} from "lucide-react-native";
 import {timeSince} from "@/lib/utils/time_since";
 import {PREVIEW_USE_LOWER_QUALITY} from "@/appconfig";
 import Animated from "react-native-reanimated";
-import {router} from "expo-router";
 import {fadingPulseAnimation} from "@/lib/animations/fading_pulse";
+import {useRouter} from "expo-router";
 
 export default function OnlineWallpaperGridItem(wallpaper: WallpaperPostType) {
+  const router = useRouter();
   const thumbnail: string =
     (PREVIEW_USE_LOWER_QUALITY ? wallpaper.image.preview_small_url : null) ??
     wallpaper.image.preview_url ??
     wallpaper.image.url;
 
+  function openDownloadScreen() {
+    router.push({pathname: "/download", params: {wallpaper: JSON.stringify(wallpaper)}});
+  }
+
   return (
     <View className="pb-2" style={{flex: 0.5}}>
-      <Pressable
-        onPress={() => {
-          router.push({pathname: "/download", params: {wallpaper: JSON.stringify(wallpaper)}});
-        }}>
+      <Pressable onPress={openDownloadScreen}>
         <View className="flex flex-col h-[26rem]">
           <View className="relative flex-1 web:block">
             <Animated.View

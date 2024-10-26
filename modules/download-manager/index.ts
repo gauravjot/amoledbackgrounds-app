@@ -24,8 +24,10 @@ export function downloadProgressListener(listener: (event: {progress: number}) =
   return emitter.addListener<{progress: number}>("onDownloadProgress", listener);
 }
 
-export function getDownloadedFiles(): {name: string; path: string}[] {
-  return DownloadManagerModule.getDownloadedFiles();
+export function getDownloadedFiles(
+  matchNameStr: string,
+): {name: string; path: string; width: string; height: string}[] {
+  return DownloadManagerModule.getDownloadedFiles(matchNameStr);
 }
 
 /*
