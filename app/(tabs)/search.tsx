@@ -8,7 +8,7 @@ import {useMutation} from "@tanstack/react-query";
 import {getWallpapersFromSearch} from "@/lib/services/search_wallpapers";
 import {Input} from "@/components/ui/Input";
 import useDebounce from "@/hooks/useDebounce";
-import {Search} from "lucide-react-native";
+import {Search, X} from "lucide-react-native";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import {LinearGradient} from "expo-linear-gradient";
 
@@ -16,7 +16,7 @@ export default function SearchScreen() {
   const [posts, setPosts] = React.useState<WallpaperPostType[]>();
   const [query, setQuery] = React.useState("");
   const inputRef = React.useRef<TextInput>(null);
-  const debouncedQuery = useDebounce(query, 1000);
+  const debouncedQuery = useDebounce(query, query.length > 2 ? 500 : 0);
 
   // Focus input on mount
   React.useEffect(() => {
@@ -54,12 +54,14 @@ export default function SearchScreen() {
       <View className="h-screen bg-background">
         <LinearGradient colors={["black", "rgba(0,0,0,0.25)"]} className="absolute top-0 right-0 z-10 w-screen">
           <View className="w-screen bg-background/80">
-            <View className="flex flex-row items-center h-[68px] gap-4 px-4">
-              <Search size={24} color="gray" />
+            <View className="flex flex-row items-center h-[68px] gap-4 px-4 relative">
+              <Search size={24} color="#454545" />
               <Input
                 ref={inputRef}
                 className="flex-1 py-1.5 px-4 rounded-lg"
                 onChangeText={text => setQuery(text)}
+                showClearButton={true}
+                value={query}
                 placeholder="Type something..."
                 placeholderTextColor={"#787878"}
               />
@@ -75,6 +77,13 @@ export default function SearchScreen() {
             columnWrapperClassName="gap-4"
             contentContainerClassName="gap-4"
             renderItem={({item}) => <OnlineWallpaperGridItem {...item} />}
+            ListHeaderComponent={() => (
+              <View className="flex items-center w-full pb-2 border-b border-zinc-900">
+                <Text className="text-sm text-zinc-500">
+                  Found {posts?.length} wallpapers for '{debouncedQuery}'
+                </Text>
+              </View>
+            )}
             ListFooterComponent={() => (
               <View className="flex items-center justify-start w-full h-64 mb-16">
                 <Text className="px-4 pt-12 text-sm text-zinc-400">End of posts</Text>

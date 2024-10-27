@@ -20,6 +20,7 @@ type PostsType = {
 } | null;
 
 export default function HomeScreen() {
+  const flatListRef = React.useRef<FlatList>(null);
   const [posts, setPosts] = React.useState<PostsType>();
 
   // Lock to prevent multiple fetches
@@ -67,7 +68,8 @@ export default function HomeScreen() {
 
   // Trigger fetch on sort change
   React.useEffect(() => {
-    if (wallpaperMutation.isPending) {
+    if (flatListRef.current) {
+      flatListRef.current.scrollToOffset({animated: true, offset: 0});
     }
     setPosts(null);
     wallpaperMutation.mutate();
@@ -105,6 +107,7 @@ export default function HomeScreen() {
         )}
         {/* TODO: on sort change, scroll to top */}
         <FlatList
+          ref={flatListRef}
           numColumns={2}
           keyExtractor={item => item.id}
           data={posts?.posts}

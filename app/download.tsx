@@ -4,7 +4,7 @@ import {WallpaperPostType} from "@/lib/services/wallpaper_type";
 import {useLocalSearchParams} from "expo-router";
 import {Text} from "@/components/ui/Text";
 import {SafeAreaView} from "react-native-safe-area-context";
-import Animated, {useSharedValue, withTiming} from "react-native-reanimated";
+import Animated, {useSharedValue, withTiming, withDelay} from "react-native-reanimated";
 import {
   ArrowDownCircle,
   ArrowLeft,
@@ -51,6 +51,7 @@ export default function DownloadScreen() {
 
   // Animations
   const animateOpacity = useSharedValue(1);
+  const animatePushDown = useSharedValue(0);
 
   // On start of the screen
   // check if current wallpaper is downloaded
@@ -80,9 +81,18 @@ export default function DownloadScreen() {
       animateOpacity.value = withTiming(1, {
         duration: 200,
       });
+      animatePushDown.value = withTiming(0, {
+        duration: 200,
+      });
     } else {
-      animateOpacity.value = withTiming(0, {
-        duration: 500,
+      animateOpacity.value = withDelay(
+        100,
+        withTiming(0, {
+          duration: 400,
+        }),
+      );
+      animatePushDown.value = withTiming(-250, {
+        duration: 800,
       });
     }
   }
@@ -173,9 +183,13 @@ export default function DownloadScreen() {
       </View>
       {/* Bottom Info Panel */}
       <SafeAreaView className="absolute top-0 bottom-0 left-0 right-0 z-20 flex flex-col">
-        <Pressable className="relative z-0 flex-1" onPress={fullScreenWallpaperToggle}></Pressable>
-
-        <Animated.View className="relative w-full bg-background/80" style={{opacity: animateOpacity}}>
+        <Pressable
+          className="absolute top-0 bottom-0 left-0 right-0 z-0"
+          onPress={fullScreenWallpaperToggle}></Pressable>
+        <View className="flex-1"></View>
+        <Animated.View
+          className="relative w-full bg-background/80"
+          style={{opacity: animateOpacity, bottom: animatePushDown}}>
           <LinearGradient colors={["rgba(0,0,0,0.1)", "black"]} className="relative z-10 p-4">
             {downloadState.status !== "complete" && downloadState.status !== "downloading" ? (
               <Button
@@ -194,7 +208,7 @@ export default function DownloadScreen() {
                 <ButtonText>Apply</ButtonText>
               </Button>
             ) : applyState === "applied" ? (
-              <Button variant={"emerald"} className="absolute z-30 rounded-full -top-6 right-4" disabled>
+              <Button variant={"secondary"} className="absolute z-30 rounded-full -top-6 right-4" disabled>
                 <CheckCircle size={16} color="white" />
                 <ButtonText>Applied</ButtonText>
               </Button>

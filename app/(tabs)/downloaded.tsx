@@ -37,7 +37,15 @@ export default function DownloadedWallpapersScreen() {
     <SafeAreaView className="bg-background">
       <View className="h-screen bg-background">
         <View className="absolute top-0 z-10 w-full">
-          <TopBar showLoader={false} title="Downloads"></TopBar>
+          <TopBar showLoader={false} title="Downloads">
+            <Button
+              variant="ghost"
+              className="border active:bg-white/20 rounded-xl bg-white/10 border-zinc-800"
+              size="md"
+              onPress={() => {}}>
+              <ButtonText>Sort</ButtonText>
+            </Button>
+          </TopBar>
         </View>
         <FlatList
           numColumns={2}
