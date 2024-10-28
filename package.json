@@ -9,6 +9,8 @@
     "web": "expo start --web",
     "test": "jest --watchAll",
     "lint": "expo lint",
+    "build-rn-local": "npx react-native build-android --mode=release",
+    "build-eas-local": " npx eas-cli@latest build --platform android --profile production --local",
     "build-android-dev": "eas build --profile development --platform android"
   },
   "jest": {
