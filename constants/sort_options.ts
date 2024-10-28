@@ -2,9 +2,9 @@
 export enum SortOptions {
   Hot = "Hot",
   New = "New",
-  TopDay = "Top 24h",
-  TopWeek = "Top Week",
-  TopMonth = "Top Month",
-  TopYear = "Top Year",
-  TopAll = "Top All",
+  "Top 24h" = "Top 24h",
+  "Top Week" = "Top Week",
+  "Top Month" = "Top Month",
+  "Top Year" = "Top Year",
+  "Top All" = "Top All",
 }

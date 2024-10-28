@@ -125,15 +125,15 @@ function getURIFromSort(sort: SortOptions) {
       return "hot.json";
     case SortOptions.New:
       return "new.json";
-    case SortOptions.TopDay:
+    case SortOptions["Top 24h"]:
       return "top.json?t=day";
-    case SortOptions.TopWeek:
+    case SortOptions["Top Week"]:
       return "top.json?t=week";
-    case SortOptions.TopMonth:
+    case SortOptions["Top Month"]:
       return "top.json?t=month";
-    case SortOptions.TopYear:
+    case SortOptions["Top Year"]:
       return "top.json?t=year";
-    case SortOptions.TopAll:
+    case SortOptions["Top All"]:
       return "top.json?t=all";
     default:
       return "hot.json";

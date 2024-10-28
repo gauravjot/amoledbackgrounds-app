@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "AmoledBackgrounds for Reddit",
+    "name": "AmoledBackgrounds",
     "slug": "amoledbackgrounds-app",
     "version": "2.0.0-rc1",
     "orientation": "portrait",
@@ -36,7 +36,7 @@
     "web": {
       "bundler": "metro",
       "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/images/icon.svg"
     },
     "plugins": [
       "expo-router",

@@ -11,12 +11,16 @@ import useDebounce from "@/hooks/useDebounce";
 import {Search, X} from "lucide-react-native";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import {LinearGradient} from "expo-linear-gradient";
+import {useSettingsStore} from "@/store/settings";
+import {Button, ButtonText} from "@/components/ui/Button";
 
 export default function SearchScreen() {
   const [posts, setPosts] = React.useState<WallpaperPostType[]>();
   const [query, setQuery] = React.useState("");
   const inputRef = React.useRef<TextInput>(null);
   const debouncedQuery = useDebounce(query, query.length > 2 ? 500 : 0);
+
+  const store = useSettingsStore();
 
   // Focus input on mount
   React.useEffect(() => {
@@ -31,6 +35,9 @@ export default function SearchScreen() {
       return;
     }
     wallpaperMutation.mutate(debouncedQuery);
+    if (store.rememberSearchHistory) {
+      store.addSearchHistory(debouncedQuery);
+    }
   }, [debouncedQuery]);
 
   // Fetch wallpapers logic
@@ -97,7 +104,26 @@ export default function SearchScreen() {
           </View>
         ) : (
           <>
-            <View className="absolute top-0 right-0 z-0 flex items-center justify-center w-full h-screen">
+            {store.rememberSearchHistory && (
+              <View className="z-10 flex flex-row flex-wrap items-center gap-3 px-4 mt-20 bg-background">
+                <Text className="text-sm text-zinc-500">Recent searches</Text>
+                {store.searchHistory.length > 0 && (
+                  <>
+                    {store.searchHistory.map(q => (
+                      <Button key={q} size={"sm"} onPress={() => setQuery(q)}>
+                        <ButtonText>{q}</ButtonText>
+                      </Button>
+                    ))}
+                    <Button size={"sm"} variant={"ghost"} onPress={() => store.clearSearchHistory()}>
+                      <ButtonText variant={"secondary"} size={"md"}>
+                        Clear history
+                      </ButtonText>
+                    </Button>
+                  </>
+                )}
+              </View>
+            )}
+            <View className="absolute top-0 right-0 z-0 flex items-center justify-center w-full h-screen -mt-16">
               <Search size={48} color="#565656" strokeWidth={1.25} />
               <Text className="mt-2 font-bold text-zinc-600">Type in the search box above to get started</Text>
             </View>

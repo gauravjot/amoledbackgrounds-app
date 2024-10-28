@@ -1,10 +1,8 @@
 import {FlatList, View} from "react-native";
 import {Text} from "@/components/ui/Text";
 import {SafeAreaView} from "react-native-safe-area-context";
-import HomeTopBar from "@/components/HomeTopBar";
 import React from "react";
 import {getWallpapers} from "@/lib/services/get_wallpapers";
-import {useSortStore} from "@/store/sort";
 import {useMutation} from "@tanstack/react-query";
 import {PaginationType, WallpaperPostType} from "@/lib/services/wallpaper_type";
 import {CircleX} from "lucide-react-native";
@@ -13,6 +11,10 @@ import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import Animated from "react-native-reanimated";
 import OnlineWallpaperGridItem from "@/components/OnlineWallpaperGridItem";
 import {fadingPulseAnimation} from "@/lib/animations/fading_pulse";
+import {useSettingsStore} from "@/store/settings";
+import {SortOptions} from "@/constants/sort_options";
+import Select from "@/components/ui/Select";
+import TopBar from "@/components/ui/TopBar";
 
 type PostsType = {
   posts: WallpaperPostType[];
@@ -20,18 +22,17 @@ type PostsType = {
 } | null;
 
 export default function HomeScreen() {
+  const store = useSettingsStore();
   const flatListRef = React.useRef<FlatList>(null);
   const [posts, setPosts] = React.useState<PostsType>();
+  const [sort, setSort] = React.useState<SortOptions>(store.rememberSortPreferences ? store.homeSort : SortOptions.Hot);
 
   // Lock to prevent multiple fetches
   const [isMutationLock, setIsMutationLock] = React.useState(false);
 
-  // Sort store
-  const sortStore = useSortStore();
-
   // Fetch wallpapers logic
   const wallpaperMutation = useMutation({
-    mutationKey: ["wallpapers", sortStore.sort],
+    mutationKey: ["wallpapers", sort],
     mutationFn: () => {
       if (posts && posts.pagination.after === null) {
         return Promise.reject("[SafeError, EndOfPosts] No more to fetch.");
@@ -43,7 +44,7 @@ export default function HomeScreen() {
       setIsMutationLock(true);
       // Fetch wallpapers
       return getWallpapers(
-        sortStore.sort,
+        sort,
         posts?.pagination.after,
         posts?.pagination.page_number ? posts.pagination.page_number + 1 : 1,
       );
@@ -66,20 +67,35 @@ export default function HomeScreen() {
     },
   });
 
-  // Trigger fetch on sort change
-  React.useEffect(() => {
+  // When sort is changed, change states
+  function onSortChange(sort: SortOptions) {
     if (flatListRef.current) {
       flatListRef.current.scrollToOffset({animated: true, offset: 0});
     }
-    setPosts(null);
+    setPosts(null); // empty out posts
+    setSort(sort); // set new sort
+    store.setHomeSort(sort); // store
+  }
+
+  // Trigger wallpaper fetch on sort change
+  React.useEffect(() => {
     wallpaperMutation.mutate();
-  }, [sortStore.sort]);
+  }, [sort]);
 
   return (
     <SafeAreaView className="bg-background">
       <View className="h-screen bg-background">
         <View className="absolute top-0 z-10 w-full">
-          <HomeTopBar showLoader={posts !== null && wallpaperMutation.isPending} title="Amoled Backgrounds" />
+          <TopBar showLoader={posts !== null && wallpaperMutation.isPending} title="Amoled Backgrounds">
+            <Select
+              defaultValue={sort}
+              options={Object.keys(SortOptions)}
+              onChange={e => {
+                onSortChange(SortOptions[e as keyof typeof SortOptions]);
+              }}
+              width={140}
+            />
+          </TopBar>
         </View>
         {wallpaperMutation.isError && wallpaperMutation.error.message?.includes("SafeError") && (
           <View className="absolute top-0 right-0 z-50 flex justify-center w-full h-screen bg-background/70">

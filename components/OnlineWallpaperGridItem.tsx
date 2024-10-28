@@ -3,15 +3,16 @@ import {Text} from "@/components/ui/Text";
 import {WallpaperPostType} from "@/lib/services/wallpaper_type";
 import {ArrowUp, MessageSquareMore} from "lucide-react-native";
 import {timeSince} from "@/lib/utils/time_since";
-import {PREVIEW_USE_LOWER_QUALITY} from "@/appconfig";
 import Animated from "react-native-reanimated";
 import {fadingPulseAnimation} from "@/lib/animations/fading_pulse";
 import {useRouter} from "expo-router";
+import {useSettingsStore} from "@/store/settings";
 
 export default function OnlineWallpaperGridItem(wallpaper: WallpaperPostType) {
   const router = useRouter();
+  const store = useSettingsStore();
   const thumbnail: string =
-    (PREVIEW_USE_LOWER_QUALITY ? wallpaper.image.preview_small_url : null) ??
+    (store.isLowerThumbnailQualityEnabled ? wallpaper.image.preview_small_url : null) ??
     wallpaper.image.preview_url ??
     wallpaper.image.url;
 

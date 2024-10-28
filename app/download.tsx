@@ -41,9 +41,10 @@ export default function DownloadScreen() {
 
   // Wallpaper information
   const wallpaper = JSON.parse(params["wallpaper"] as string) as WallpaperPostType;
-  const filename = `${wallpaper.title.replace(/[\/\\#,+()|~%'":*?<>{}]/g, "").replaceAll(" ", "_")}_-_${
-    wallpaper.id
-  }_amoled_droidheat`;
+  const filename = `${wallpaper.title
+    .replace(/[\/\\#,+()|~%'":*?<>{}]/g, "") // Remove special characters
+    .replace(/\s\s+/g, " ") // Remove extra spaces
+    .replaceAll(" ", "_")}_-_${wallpaper.id}_amoled_droidheat`;
   const file_extension = wallpaper.image.url.split(".").pop() || ".png";
 
   // Store to save downloaded wallpapers to
