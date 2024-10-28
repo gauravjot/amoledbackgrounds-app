@@ -10,7 +10,7 @@ import {useSettingsStore} from "@/store/settings";
 import Animated, {FadeInUp} from "react-native-reanimated";
 import Select from "@/components/ui/Select";
 import {SortOptions} from "@/constants/sort_options";
-import {PLAY_STORE_URL, PRIVACY_POLICY_URL, SEARCH_HISTORY_LIMIT} from "@/appconfig";
+import {CHANGELOG_URL, PLAY_STORE_URL, PRIVACY_POLICY_URL, SEARCH_HISTORY_LIMIT} from "@/appconfig";
 import PlayStoreIcon from "@/assets/icons/play_store.svg";
 
 export default function SettingsScreen() {
@@ -88,7 +88,7 @@ export default function SettingsScreen() {
           <Pressable
             className="p-4 active:bg-foreground/10"
             onPress={async () => {
-              await WebBrowser.openBrowserAsync("https://www.google.com");
+              await WebBrowser.openBrowserAsync(CHANGELOG_URL);
             }}>
             <Text className="font-bold">Changelog</Text>
           </Pressable>
