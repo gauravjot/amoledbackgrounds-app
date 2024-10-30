@@ -69,7 +69,7 @@ export default function SettingsScreen() {
 
           <SettingSwitchComponent
             title="Remember Sort Preferences"
-            description="Remember the last sort preferences you used in Home"
+            description="Remember the last sort preferences you used in Home and Downloads"
             isEnabled={store.rememberSortPreferences}
             onChange={e => {
               store.setRememberedSortPreferences(e);
@@ -138,7 +138,7 @@ function SettingSwitchComponent({
     <Pressable className="active:bg-foreground/10" onPress={() => onChange(!isEnabled)}>
       <View className="flex flex-row gap-4 p-4">
         <View className="flex-1">
-          <Text className="mb-1 font-bold">{title}</Text>
+          <Text className="mb-1 font-bold text-[16.5px]">{title}</Text>
           <Text className="text-sm text-zinc-400">{description}</Text>
         </View>
         <View>
