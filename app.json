@@ -3,19 +3,8 @@
     "name": "AmoledBackgrounds",
     "slug": "amoledbackgrounds-app",
     "version": "2.0.0-rc1",
-    "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
-    "scheme": "myapp",
-    "userInterfaceStyle": "dark",
-    "splash": {
-      "image": "./assets/images/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#000000"
-    },
-    "ios": {
-      "supportsTablet": true
-    },
     "android": {
+      "versionCode": 28,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#000000"
@@ -32,11 +21,6 @@
         "android.permission.FOREGROUND_SERVICE"
       ],
       "package": "com.droidheat.amoledbackgrounds"
-    },
-    "web": {
-      "bundler": "metro",
-      "output": "static",
-      "favicon": "./assets/images/icon.svg"
     },
     "plugins": [
       "expo-router",
@@ -55,6 +39,23 @@
         }
       ]
     ],
+    "web": {
+      "bundler": "metro",
+      "output": "static",
+      "favicon": "./assets/images/icon.svg"
+    },
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "myapp",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "image": "./assets/images/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#000000"
+    },
+    "ios": {
+      "supportsTablet": true
+    },
     "experiments": {
       "typedRoutes": true
     },
