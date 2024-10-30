@@ -9,6 +9,8 @@ export interface SettingsStore {
   setDownloadDir: (dir: string | null) => void;
   homeSort: SortOptions;
   setHomeSort: (sort: SortOptions) => void;
+  downloadedScreenSort: "Old to New" | "New to Old";
+  setDownloadedScreenSort: (sort: "Old to New" | "New to Old") => void;
   searchHistory: string[];
   addSearchHistory: (query: string) => void;
   clearSearchHistory: () => void;
@@ -32,6 +34,7 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
     set({
       downloadDir: settings.downloadDir,
       homeSort: settings.homeSort || SortOptions.Hot,
+      downloadedScreenSort: settings.downloadedScreenSort || "Old to New",
       searchHistory: settings.searchHistory || [],
       isDailyWallpaperEnabled: settings.isDailyWallpaperEnabled || false,
       dailyWallpaperMode: settings.dailyWallpaperMode || "Online",
@@ -54,6 +57,14 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
   setHomeSort: async (sort: SortOptions) => {
     const currentSettings = await getSettings();
     const newSettings = {...currentSettings, homeSort: sort};
+    await AsyncStorage.setItem("settings", JSON.stringify(newSettings));
+    set(newSettings);
+  },
+
+  downloadedScreenSort: "Old to New",
+  setDownloadedScreenSort: async (sort: string) => {
+    const currentSettings = await getSettings();
+    const newSettings = {...currentSettings, downloadedScreenSort: sort};
     await AsyncStorage.setItem("settings", JSON.stringify(newSettings));
     set(newSettings);
   },

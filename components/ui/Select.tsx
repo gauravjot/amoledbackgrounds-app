@@ -49,7 +49,7 @@ export default function Select({
     <View className="relative">
       <Button
         variant="ghost"
-        className="border active:bg-white/20 rounded-xl bg-white/10 border-zinc-800"
+        className="pl-3 pr-2 border active:bg-white/20 rounded-xl bg-white/10 border-zinc-800"
         size="md"
         onPress={() => setIsOpen(v => !v)}>
         <ButtonText>{selected}</ButtonText>

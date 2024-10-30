@@ -11,6 +11,8 @@ import * as WallpaperManager from "@/modules/wallpaper-manager";
 import {fadingPulseAnimation} from "@/lib/animations/fading_pulse";
 import {onChangeListener} from "../../modules/wallpaper-manager/index";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import Select from "@/components/ui/Select";
+import {useSettingsStore} from "@/store/settings";
 
 type WallpaperApplyState = {
   status: "idle" | "applying" | "applied" | "error";
@@ -18,8 +20,10 @@ type WallpaperApplyState = {
 };
 
 export default function DownloadedWallpapersScreen() {
+  const store = useSettingsStore();
   const [applyState, setApplyState] = React.useState<WallpaperApplyState>({status: "idle", path: ""});
-  const posts = useDownloadedWallpapersStore().files;
+  const flatListRef = React.useRef<FlatList>(null);
+  let posts = useDownloadedWallpapersStore().files;
 
   // Listeners
   React.useEffect(() => {
@@ -43,19 +47,21 @@ export default function DownloadedWallpapersScreen() {
       <View className="h-screen bg-background">
         <View className="absolute top-0 z-10 w-full">
           <TopBar showLoader={false} title="Downloads">
-            <Button
-              variant="ghost"
-              className="border active:bg-white/20 rounded-xl bg-white/10 border-zinc-800"
-              size="md"
-              onPress={() => {}}>
-              <ButtonText>Sort</ButtonText>
-            </Button>
+            <Select
+              options={["Old to New", "New to Old"]}
+              defaultValue="Old to New"
+              onChange={(value: string) => {
+                store.setDownloadedScreenSort(value as any);
+                if (flatListRef.current) flatListRef.current.scrollToOffset({offset: 0});
+              }}
+            />
           </TopBar>
         </View>
         <FlatList
+          ref={flatListRef}
           numColumns={2}
           keyExtractor={item => item.path}
-          data={posts}
+          data={store.downloadedScreenSort === "Old to New" ? posts : posts.slice().reverse()}
           className="z-0 w-full px-3 pt-20"
           columnWrapperClassName="gap-4"
           contentContainerClassName="gap-4"
