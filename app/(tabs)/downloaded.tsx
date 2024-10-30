@@ -10,6 +10,7 @@ import {CheckCircle, ImageIcon} from "lucide-react-native";
 import * as WallpaperManager from "@/modules/wallpaper-manager";
 import {fadingPulseAnimation} from "@/lib/animations/fading_pulse";
 import {onChangeListener} from "../../modules/wallpaper-manager/index";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
 
 type WallpaperApplyState = {
   status: "idle" | "applying" | "applied" | "error";
@@ -24,8 +25,12 @@ export default function DownloadedWallpapersScreen() {
   React.useEffect(() => {
     // wallpaper change listener
     const wallpaperChangeListener = onChangeListener(e => {
-      setApplyState({status: e.success ? "applied" : "error", path: applyState.path});
-      if (e.success) ToastAndroid.show("Wallpaper applied successfully", ToastAndroid.SHORT);
+      setApplyState({status: e.success ? "applied" : "error", path: e.path});
+      if (e.success) {
+        ToastAndroid.show("Wallpaper applied successfully", ToastAndroid.SHORT);
+      } else {
+        ToastAndroid.show("Failed to apply wallpaper", ToastAndroid.SHORT);
+      }
     });
     return () => {
       // When component is killed, clear all listeners
@@ -57,10 +62,10 @@ export default function DownloadedWallpapersScreen() {
           renderItem={({item}) => (
             <WallpaperGridItem
               wallpaper={item}
-              isApplied={applyState.status === "applied" && applyState.path === item.path}
-              applyWallpaper={() => {
-                WallpaperManager.setWallpaper(item.path);
+              applyState={applyState.path === item.path ? applyState.status : "idle"}
+              applyWallpaper={async () => {
                 setApplyState({status: "applying", path: item.path});
+                await WallpaperManager.setWallpaper(item.path);
               }}
             />
           )}
@@ -77,11 +82,11 @@ export default function DownloadedWallpapersScreen() {
 
 function WallpaperGridItem({
   wallpaper,
-  isApplied,
+  applyState,
   applyWallpaper,
 }: {
   wallpaper: DownloadedWallpaperPostType;
-  isApplied: boolean;
+  applyState: "idle" | "applying" | "applied" | "error";
   applyWallpaper: () => void;
 }) {
   return (
@@ -98,7 +103,7 @@ function WallpaperGridItem({
           {/* <View className="z-10 flex-1 w-full h-full border rounded-lg border-foreground/10">
             <ImageView path={wallpaper.path} />
           </View> */}
-          {isApplied ? (
+          {applyState === "applied" ? (
             <Button
               variant={"ghost"}
               size={"md"}
@@ -106,6 +111,15 @@ function WallpaperGridItem({
               disabled>
               <CheckCircle size={20} color="white" />
               <ButtonText>Applied</ButtonText>
+            </Button>
+          ) : applyState === "applying" ? (
+            <Button
+              variant={"ghost"}
+              size={"md"}
+              className="absolute z-20 px-3 rounded bottom-1 right-1 bg-background/80"
+              disabled>
+              <LoadingSpinner size={20} color="white" />
+              <ButtonText>Applying</ButtonText>
             </Button>
           ) : (
             <Button

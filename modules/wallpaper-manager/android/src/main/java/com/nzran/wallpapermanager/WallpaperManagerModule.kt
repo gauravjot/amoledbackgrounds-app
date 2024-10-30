@@ -6,11 +6,14 @@ import android.content.Context
 import android.app.WallpaperManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.ImageDecoder
 import java.io.IOException
 import android.provider.MediaStore
 import android.net.Uri
 import android.media.MediaScannerConnection
+import android.util.Log
 import androidx.core.os.bundleOf
+import java.util.concurrent.Executors
 
 class WallpaperManagerModule : Module() {
 
@@ -29,8 +32,10 @@ class WallpaperManagerModule : Module() {
     // Defines event names that the module can send to JavaScript.
     Events("onChange")
 
-    Function("setWallpaper") { path: String ->
-      setWallpaper(context, path)
+    AsyncFunction("setWallpaper") { path: String ->
+      Executors.newSingleThreadExecutor().execute{
+        setWallpaper(context, path)
+      }
     }
 
     // Enables the module to be used as a native view. Definition components that are accepted as part of
@@ -44,34 +49,37 @@ class WallpaperManagerModule : Module() {
   }
 
 
-  fun setWallpaper(context: Context, path: String) {
+  private fun setWallpaper(context: Context, path: String) {
     // Set wallpaper
     val wallpaperManager = WallpaperManager.getInstance(context)
 
     val options: BitmapFactory.Options = BitmapFactory.Options()
     options.inPreferredConfig = Bitmap.Config.ARGB_8888
 
-    MediaScannerConnection.scanFile(context, arrayOf(path), null,
-      object : MediaScannerConnection.OnScanCompletedListener {
-        override fun onScanCompleted(path: String, uri: Uri) {
-          val bitmap: Bitmap = MediaStore.Images.Media.getBitmap(context.getContentResolver(), uri);
-          if (bitmap != null) {
-            try {
-              wallpaperManager.setBitmap(bitmap)
-              // send event to JavaScript
-              this@WallpaperManagerModule.sendEvent("onChange", bundleOf(
-                "success" to true
-              ))
-            } catch (e: IOException) {
-              e.printStackTrace()
-              // send event to JavaScript
-              this@WallpaperManagerModule.sendEvent("onChange", bundleOf(
-                "success" to false
-              ))
-            }
-          }
-        }
+    MediaScannerConnection.scanFile(context, arrayOf(path), null
+    ) { path, uri ->
+      try {
+        val source: ImageDecoder.Source = ImageDecoder.createSource(context.contentResolver, uri)
+        val bitmap: Bitmap = ImageDecoder.decodeBitmap(source);
+        wallpaperManager.setBitmap(bitmap)
+        // send event to JavaScript
+        this@WallpaperManagerModule.sendEvent(
+          "onChange", bundleOf(
+            "success" to true,
+            "path" to path
+          )
+        )
+      } catch (e: Exception) {
+        Log.e("WallpaperManagerModule", "Attempted to set wallpaper: $path")
+        e.printStackTrace()
+        // send event to JavaScript
+        this@WallpaperManagerModule.sendEvent(
+          "onChange", bundleOf(
+            "success" to false,
+            "path" to path
+          )
+        )
       }
-    )
+    }
   }
 }

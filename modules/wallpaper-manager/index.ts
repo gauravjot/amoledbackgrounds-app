@@ -6,7 +6,7 @@ import WallpaperManagerModule from "./src/WallpaperManagerModule";
 import WallpaperManagerView from "./src/WallpaperManagerView";
 import {ChangeEventPayload, WallpaperManagerViewProps} from "./src/WallpaperManager.types";
 
-export function setWallpaper(path: string) {
+export async function setWallpaper(path: string): Promise<boolean> {
   return WallpaperManagerModule.setWallpaper(path);
 }
 

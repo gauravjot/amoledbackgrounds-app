@@ -153,10 +153,10 @@ export default function DownloadScreen() {
   }, []);
 
   // Apply wallpaper
-  function applyWallpaper() {
+  async function applyWallpaper() {
     try {
       setApplyState("applying");
-      setWallpaper(fileSystemPath as string);
+      await setWallpaper(fileSystemPath as string);
     } catch (e) {
       // TODO: Log this error somewhere
       console.log(e);
@@ -168,8 +168,11 @@ export default function DownloadScreen() {
       <Animated.View
         style={fadingPulseAnimation(3000)}
         className="absolute top-0 left-0 z-0 w-full h-full bg-foreground/20"></Animated.View>
-      <Image className="z-10 flex-1 object-contain w-full h-full" source={{uri: wallpaper.image.url}} />
-      <View className="absolute top-0 left-0 right-0 z-30 w-full">
+      <Image
+        className="absolute top-0 bottom-0 left-0 right-0 z-10 object-contain w-full h-full"
+        source={{uri: wallpaper.image.url}}
+      />
+      <View className="absolute top-0 left-0 right-0 z-30 w-full h-10">
         <SafeAreaView>
           <Animated.View style={{opacity: animateOpacity}}>
             <Button
@@ -199,6 +202,11 @@ export default function DownloadScreen() {
                 onPress={downloadUsingNative}>
                 <ArrowDownCircle size={16} color="white" />
                 <ButtonText>Download</ButtonText>
+              </Button>
+            ) : applyState === "applying" ? (
+              <Button variant={"emerald"} className="absolute z-30 px-0 pl-2 pr-4 rounded-full -top-6 right-4" disabled>
+                <LoadingSpinner />
+                <ButtonText>Applying</ButtonText>
               </Button>
             ) : downloadState.status === "complete" && applyState !== "applied" ? (
               <Button
