@@ -23,8 +23,8 @@ import {setWallpaper, onChangeListener} from "@/modules/wallpaper-manager";
 import {router} from "expo-router";
 import {LinearGradient} from "expo-linear-gradient";
 import * as DownloadManager from "@/modules/download-manager";
-import {fadingPulseAnimation} from "@/lib/animations/fading_pulse";
 import {ToastAndroid} from "react-native";
+import {useSettingsStore} from "@/store/settings";
 
 type DownloadState = {
   status: "idle" | "downloading" | "complete" | "error_finishing" | "error_starting";
@@ -49,6 +49,7 @@ export default function DownloadScreen() {
 
   // Store to save downloaded wallpapers to
   const store = useDownloadedWallpapersStore();
+  const settingStore = useSettingsStore();
 
   // Animations
   const animateOpacity = useSharedValue(1);
@@ -102,7 +103,7 @@ export default function DownloadScreen() {
   function downloadUsingNative() {
     try {
       const downloading = DownloadManager.downloadImage(wallpaper.image.url, filename, file_extension);
-      if (downloading) {
+      if (downloading > -1) {
         setDownloadState({status: "downloading", progress: 0});
       }
     } catch (e) {
@@ -139,7 +140,7 @@ export default function DownloadScreen() {
     });
     // download progress listener
     const downloadProgressListener = DownloadManager.downloadProgressListener(e => {
-      if (downloadState.status !== "complete") {
+      if (downloadState.status !== "complete" && e.filename === filename) {
         setDownloadState({status: "downloading", progress: e.progress});
       }
     });
@@ -165,12 +166,19 @@ export default function DownloadScreen() {
 
   return (
     <View className="relative h-screen bg-background">
-      <Animated.View
-        style={fadingPulseAnimation(3000)}
-        className="absolute top-0 left-0 z-0 w-full h-full bg-foreground/20"></Animated.View>
+      <Image
+        className="absolute top-0 left-0 z-0 object-contain w-full h-full"
+        source={{
+          uri: settingStore.isLowerThumbnailQualityEnabled
+            ? wallpaper.image.preview_small_url
+            : wallpaper.image.preview_url,
+          height: wallpaper.image.height,
+          width: wallpaper.image.width,
+        }}
+      />
       <Image
         className="absolute top-0 bottom-0 left-0 right-0 z-10 object-contain w-full h-full"
-        source={{uri: wallpaper.image.url}}
+        source={{uri: wallpaper.image.url, height: wallpaper.image.height, width: wallpaper.image.width}}
       />
       <View className="absolute top-0 left-0 right-0 z-30 w-full h-10">
         <SafeAreaView>

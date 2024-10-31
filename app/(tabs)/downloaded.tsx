@@ -13,6 +13,8 @@ import {onChangeListener} from "../../modules/wallpaper-manager/index";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import Select from "@/components/ui/Select";
 import {useSettingsStore} from "@/store/settings";
+import {hasPermissionForStorage, requestStoragePermissionsAsync} from "@/modules/download-manager";
+import {DownloadedWallpaperStore} from "../../store/downloaded_wallpapers";
 
 type WallpaperApplyState = {
   status: "idle" | "applying" | "applied" | "error";
@@ -21,12 +23,22 @@ type WallpaperApplyState = {
 
 export default function DownloadedWallpapersScreen() {
   const store = useSettingsStore();
+  const DownloadedWallpaperStore = useDownloadedWallpapersStore();
   const [applyState, setApplyState] = React.useState<WallpaperApplyState>({status: "idle", path: ""});
   const flatListRef = React.useRef<FlatList>(null);
   let posts = useDownloadedWallpapersStore().files;
 
   // Listeners
   React.useEffect(() => {
+    // request permission for storage if we dont have it
+    const runPermissions = async () => {
+      if (!hasPermissionForStorage()) {
+        await requestStoragePermissionsAsync();
+        await DownloadedWallpaperStore.initialize();
+        posts = useDownloadedWallpapersStore().files;
+      }
+    };
+    runPermissions();
     // wallpaper change listener
     const wallpaperChangeListener = onChangeListener(e => {
       setApplyState({status: e.success ? "applied" : "error", path: e.path});

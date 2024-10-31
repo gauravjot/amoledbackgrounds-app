@@ -9,7 +9,7 @@ import {ChangeEventPayload, DownloadManagerViewProps} from "./src/DownloadManage
 /**
  * Download a file from the given URL.
  */
-export function downloadImage(url: string, filename: string, file_extension: string): boolean {
+export function downloadImage(url: string, filename: string, file_extension: string): number {
   return DownloadManagerModule.downloadImage(url, filename, file_extension);
 }
 
@@ -19,9 +19,9 @@ export type DownloadCompleteEvent = {success: boolean; path: string};
 export function downloadCompleteListener(listener: (event: DownloadCompleteEvent) => void): Subscription {
   return emitter.addListener<DownloadCompleteEvent>("onDownloadComplete", listener);
 }
-
-export function downloadProgressListener(listener: (event: {progress: number}) => void): Subscription {
-  return emitter.addListener<{progress: number}>("onDownloadProgress", listener);
+export type DownloadProgressEvent = {progress: number; filename: string; downloadId: number};
+export function downloadProgressListener(listener: (event: DownloadProgressEvent) => void): Subscription {
+  return emitter.addListener<DownloadProgressEvent>("onDownloadProgress", listener);
 }
 
 export function getDownloadedFiles(
@@ -35,6 +35,12 @@ export function getDownloadedFiles(
  */
 export function hasPermissionForStorage(): boolean {
   return DownloadManagerModule.hasPermissionForStorage();
+}
+export async function requestStoragePermissionsAsync(): Promise<void> {
+  return DownloadManagerModule.requestStoragePermissionsAsync();
+}
+export function openAppInDeviceSettings(): void {
+  return DownloadManagerModule.openAppInDeviceSettings();
 }
 
 // Export types

@@ -5,6 +5,7 @@ import {View} from "react-native";
 import {Button, ButtonText} from "@/components/ui/Button";
 import {NavigationHelpers, ParamListBase, TabNavigationState} from "@react-navigation/native";
 import {LinearGradient} from "expo-linear-gradient";
+import {Colors} from "@/constants/colors";
 
 const TABS: {
   [key: string]: {name: string; Icon: LucideIcon; sort: number};
@@ -70,14 +71,16 @@ function TabBar({
         <Button
           key={index}
           variant={"ghost"}
-          className="items-center justify-center flex-1 px-1 h-16 gap-0.5"
+          className={
+            (isFocused ? "bg-accent-foreground/20" : "") + " items-center justify-center flex-1 px-1 h-16 gap-0.5"
+          }
           flex={"column"}
           onPress={onPress}>
-          <Icon size={24} color={isFocused ? "white" : "gray"} />
+          <Icon size={24} color={isFocused ? Colors.accent_foreground_rgb : "gray"} />
           <ButtonText
             size={"sm"}
             numberOfLines={1}
-            className={(isFocused ? "text-foreground" : "text-zinc-500") + " font-medium"}>
+            className={(isFocused ? "text-accent-foreground" : "text-zinc-500") + " font-medium"}>
             {TABS[label].name}
           </ButtonText>
         </Button>
@@ -94,7 +97,7 @@ function TabBar({
   return (
     <>
       <LinearGradient colors={["rgba(0,0,0,0.25)", "black"]} className="absolute bottom-0 left-0 right-0 ">
-        <View className="flex flex-row h-16 gap-1 px-4 bg-background/80">
+        <View className="flex flex-row gap-1 px-4 py-1 h-18 bg-background/80">
           {tabs.map(tab => {
             return tab;
           })}

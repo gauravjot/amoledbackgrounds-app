@@ -1,7 +1,7 @@
-import {Pressable, View} from "react-native";
+import {Pressable, ScrollView, View} from "react-native";
 import React from "react";
 import {Text} from "@/components/ui/Text";
-import {SafeAreaView, useSafeAreaInsets} from "react-native-safe-area-context";
+import {SafeAreaView} from "react-native-safe-area-context";
 import TopBar from "@/components/ui/TopBar";
 import {Switch} from "@/components/ui/Switch";
 import Constants from "expo-constants";
@@ -12,112 +12,129 @@ import Select from "@/components/ui/Select";
 import {SortOptions} from "@/constants/sort_options";
 import {CHANGELOG_URL, PLAY_STORE_URL, PRIVACY_POLICY_URL, SEARCH_HISTORY_LIMIT} from "@/appconfig";
 import PlayStoreIcon from "@/assets/icons/play_store.svg";
+import {hasPermissionForStorage, openAppInDeviceSettings} from "@/modules/download-manager";
+import {Button} from "@/components/ui/Button";
 
 export default function SettingsScreen() {
   const store = useSettingsStore();
   const DAILY_WALLPAPER_MODES = ["Online", "Downloaded"];
 
   return (
-    <SafeAreaView className="bg-background">
-      <View className="h-screen bg-background">
-        <TopBar title="Settings" />
-        <View>
-          <SettingSwitchComponent
-            title="Daily Wallpaper"
-            description="Sets the current trending wallpaper daily at the time you active this feature"
-            isEnabled={store.isDailyWallpaperEnabled}
-            onChange={e => {
-              store.setDailyWallpaperEnabled(e);
-            }}
-          />
-          {store.isDailyWallpaperEnabled && (
-            <Animated.View entering={FadeInUp} className="z-50 flex flex-row items-center gap-3 px-4 mb-4">
-              <Text className="flex-1 text-zinc-400">Select mode</Text>
-              <View>
-                <Select
-                  defaultValue={store.dailyWallpaperMode}
-                  options={DAILY_WALLPAPER_MODES}
-                  onChange={e => {
-                    store.setDailyWallpaperMode(e);
-                  }}
-                  width={140}
-                />
-              </View>
-              <View>
-                {store.dailyWallpaperMode === "Online" && (
+    <SafeAreaView className="flex-1 bg-background">
+      <TopBar title="Settings">
+        <Button
+          variant={"outline"}
+          size={"md"}
+          className="flex flex-row px-3 rounded-xl bg-emerald-400/20 border-emerald-400/50 active:bg-emerald-300/20 items-center gap-1.5"
+          onPress={async () => {
+            await WebBrowser.openBrowserAsync(PLAY_STORE_URL);
+          }}>
+          <Text className="pr-1 font-bold">Rate us on</Text>
+          <PlayStoreIcon width={20} height={20} />
+          <Text className="font-bold">Play Store</Text>
+        </Button>
+      </TopBar>
+      <View className="flex-1 bg-background">
+        <ScrollView>
+          <View className="flex-1 pb-24">
+            <SettingSwitchComponent
+              title="Daily Wallpaper"
+              description="Sets the current trending wallpaper daily at the time you active this feature"
+              isEnabled={store.isDailyWallpaperEnabled}
+              onChange={e => {
+                store.setDailyWallpaperEnabled(e);
+              }}
+            />
+            {store.isDailyWallpaperEnabled && (
+              <Animated.View entering={FadeInUp} className="z-50 flex flex-row items-center gap-3 px-4 mb-4">
+                <Text className="flex-1 text-zinc-400">Select mode</Text>
+                <View>
                   <Select
-                    defaultValue={store.dailyWallpaperSort}
-                    options={Object.keys(SortOptions)}
+                    defaultValue={store.dailyWallpaperMode}
+                    options={DAILY_WALLPAPER_MODES}
                     onChange={e => {
-                      store.setDailyWallpaperSort(SortOptions[e as keyof typeof SortOptions]);
+                      store.setDailyWallpaperMode(e);
                     }}
                     width={140}
                   />
-                )}
-              </View>
-            </Animated.View>
-          )}
+                </View>
+                <View>
+                  {store.dailyWallpaperMode === "Online" && (
+                    <Select
+                      defaultValue={store.dailyWallpaperSort}
+                      options={Object.keys(SortOptions)}
+                      onChange={e => {
+                        store.setDailyWallpaperSort(SortOptions[e as keyof typeof SortOptions]);
+                      }}
+                      width={140}
+                    />
+                  )}
+                </View>
+              </Animated.View>
+            )}
 
-          <SettingSwitchComponent
-            title="Lower Thumbnail Quality"
-            description="Lower the quality of the thumbnail images to save data"
-            isEnabled={store.isLowerThumbnailQualityEnabled}
-            onChange={e => {
-              store.setLowerThumbnailQualityEnabled(e);
-            }}
-          />
+            <SettingSwitchComponent
+              title="Lower Thumbnail Quality"
+              description="Lower the quality of the thumbnail images to save data"
+              isEnabled={store.isLowerThumbnailQualityEnabled}
+              onChange={e => {
+                store.setLowerThumbnailQualityEnabled(e);
+              }}
+            />
 
-          <SettingSwitchComponent
-            title="Remember Sort Preferences"
-            description="Remember the last sort preferences you used in Home and Downloads"
-            isEnabled={store.rememberSortPreferences}
-            onChange={e => {
-              store.setRememberedSortPreferences(e);
-            }}
-          />
+            <SettingSwitchComponent
+              title="Remember Sort Preferences"
+              description="Remember the last sort preferences you used in Home and Downloads"
+              isEnabled={store.rememberSortPreferences}
+              onChange={e => {
+                store.setRememberedSortPreferences(e);
+              }}
+            />
 
-          <SettingSwitchComponent
-            title="Save Search History"
-            description={`Remembers upto ${SEARCH_HISTORY_LIMIT} latest searches`}
-            isEnabled={store.rememberSearchHistory}
-            onChange={e => {
-              store.setRememberedSearchHistory(e);
-            }}
-          />
+            <SettingSwitchComponent
+              title="Save Search History"
+              description={`Remembers upto ${SEARCH_HISTORY_LIMIT} latest searches`}
+              isEnabled={store.rememberSearchHistory}
+              onChange={e => {
+                store.setRememberedSearchHistory(e);
+              }}
+            />
 
-          <Pressable
-            className="p-4 active:bg-foreground/10"
-            onPress={async () => {
-              await WebBrowser.openBrowserAsync(CHANGELOG_URL);
-            }}>
-            <Text className="font-bold">Changelog</Text>
-          </Pressable>
+            <SettingSwitchComponent
+              title="Permissions"
+              description={
+                "Read Device Images to show in Downloads tab. Modifying this may require you to restart the app to take effect."
+              }
+              isEnabled={hasPermissionForStorage()}
+              onChange={e => {
+                openAppInDeviceSettings();
+              }}
+            />
 
-          <Pressable
-            className="p-4 active:bg-foreground/10"
-            onPress={async () => {
-              await WebBrowser.openBrowserAsync(PRIVACY_POLICY_URL);
-            }}>
-            <Text className="font-bold">Privacy Policy</Text>
-          </Pressable>
+            <Pressable
+              className="p-4 active:bg-foreground/10"
+              onPress={async () => {
+                await WebBrowser.openBrowserAsync(CHANGELOG_URL);
+              }}>
+              <Text className="font-bold">Changelog</Text>
+            </Pressable>
 
-          <Pressable
-            className="flex flex-row items-center gap-1.5 p-4 active:bg-foreground/10"
-            onPress={async () => {
-              await WebBrowser.openBrowserAsync(PLAY_STORE_URL);
-            }}>
-            <Text className="pr-1 font-bold">Rate us on</Text>
-            <PlayStoreIcon width={20} height={20} />
-            <Text className="font-bold">Play Store</Text>
-          </Pressable>
+            <Pressable
+              className="p-4 active:bg-foreground/10"
+              onPress={async () => {
+                await WebBrowser.openBrowserAsync(PRIVACY_POLICY_URL);
+              }}>
+              <Text className="font-bold">Privacy Policy</Text>
+            </Pressable>
 
-          <View className="p-4">
-            <Text className="text-zinc-400">
-              Version {Constants.expoConfig?.version ?? "Unknown"}{" "}
-              {Constants.expoConfig?.extra?.commit && `(${Constants.expoConfig?.extra?.commit.slice(0, 7)})`}
-            </Text>
+            <View className="p-4">
+              <Text className="text-zinc-400">
+                Version {Constants.expoConfig?.version ?? "Unknown"}{" "}
+                {Constants.expoConfig?.extra?.commit && `(${Constants.expoConfig?.extra?.commit.slice(0, 7)})`}
+              </Text>
+            </View>
           </View>
-        </View>
+        </ScrollView>
       </View>
     </SafeAreaView>
   );
