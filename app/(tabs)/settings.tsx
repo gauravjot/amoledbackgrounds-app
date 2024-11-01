@@ -103,7 +103,7 @@ export default function SettingsScreen() {
             <SettingSwitchComponent
               title="Permissions"
               description={
-                "Read Device Images to show in Downloads tab. Modifying this may require you to restart the app to take effect."
+                "Read device images to show in Downloads tab. Modifying this may require restarting the app to take effect."
               }
               isEnabled={hasPermissionForStorage()}
               onChange={e => {

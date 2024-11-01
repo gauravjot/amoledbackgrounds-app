@@ -53,7 +53,10 @@ export default function RootLayout() {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider value={DarkTheme}>
-        <Stack initialRouteName="(tabs)" screenOptions={{headerShown: false}} />
+        <Stack
+          initialRouteName="(tabs)"
+          screenOptions={{headerShown: false, contentStyle: {backgroundColor: "#000000"}}}
+        />
       </ThemeProvider>
     </QueryClientProvider>
   );

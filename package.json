@@ -1,7 +1,7 @@
 {
   "name": "amoledbackgrounds-app",
   "main": "expo-router/entry",
-  "version": "2.0.0-rc1",
+  "version": "2.0.0-rc2",
   "scripts": {
     "start": "expo start",
     "android": "expo run:android",
@@ -33,6 +33,7 @@
     "expo-linking": "~6.3.1",
     "expo-router": "~3.5.23",
     "expo-splash-screen": "~0.27.5",
+    "expo-status-bar": "^1.12.1",
     "expo-system-ui": "~3.0.7",
     "expo-web-browser": "~13.0.3",
     "lucide-react-native": "^0.453.0",

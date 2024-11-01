@@ -1,12 +1,12 @@
 import {SearchURL, WALLPAPERS_URL} from "@/constants/wallpaper_options";
 import axios from "axios";
-import {WallpaperImageType, WallpaperPostType} from "./wallpaper_type";
+import {PaginationType, WallpaperImageType, WallpaperPostType} from "./wallpaper_type";
 import {htmlDecode, removeParenthesisData, skipPost} from "./get_wallpapers";
 import {WALLPAPER_MIN_ALLOWED_HEIGHT, WALLPAPER_MIN_ALLOWED_WIDTH} from "@/appconfig";
 import urlJoin from "url-join";
 
-export const getWallpapersFromSearch = async (query: string) => {
-  const url = SearchURL(query);
+export const getWallpapersFromSearch = async (query: string, page: number, after: string | undefined) => {
+  const url = SearchURL(query, page, after);
 
   return await axios.get(url).then(response => {
     // Process response to get the data we need
@@ -73,6 +73,13 @@ export const getWallpapersFromSearch = async (query: string) => {
       }
     }
 
-    return posts;
+    // Construct pagination object
+    const pagination: PaginationType = {
+      page_number: page ?? 1,
+      before: response.data.data.before,
+      after: response.data.data.after,
+    };
+
+    return {posts: posts, pagination: pagination};
   });
 };

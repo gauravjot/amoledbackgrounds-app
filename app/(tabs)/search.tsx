@@ -3,24 +3,34 @@ import React from "react";
 import {Text} from "@/components/ui/Text";
 import {SafeAreaView} from "react-native-safe-area-context";
 import OnlineWallpaperGridItem from "@/components/OnlineWallpaperGridItem";
-import {WallpaperPostType} from "@/lib/services/wallpaper_type";
+import {PaginationType, WallpaperPostType} from "@/lib/services/wallpaper_type";
 import {useMutation} from "@tanstack/react-query";
 import {getWallpapersFromSearch} from "@/lib/services/search_wallpapers";
 import {Input} from "@/components/ui/Input";
 import useDebounce from "@/hooks/useDebounce";
-import {Search, X} from "lucide-react-native";
+import {Search, SearchX} from "lucide-react-native";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import {LinearGradient} from "expo-linear-gradient";
 import {useSettingsStore} from "@/store/settings";
 import {Button, ButtonText} from "@/components/ui/Button";
+import {fadingPulseAnimation} from "@/lib/animations/fading_pulse";
+import Animated from "react-native-reanimated";
+
+type PostsType = {
+  posts: WallpaperPostType[];
+  pagination: PaginationType;
+} | null;
 
 export default function SearchScreen() {
-  const [posts, setPosts] = React.useState<WallpaperPostType[]>();
+  const [posts, setPosts] = React.useState<PostsType>();
   const [query, setQuery] = React.useState("");
   const inputRef = React.useRef<TextInput>(null);
   const debouncedQuery = useDebounce(query, query.length > 2 ? 500 : 0);
 
   const store = useSettingsStore();
+
+  // Lock to prevent multiple fetches
+  const [isMutationLock, setIsMutationLock] = React.useState(false);
 
   // Focus input on mount
   React.useEffect(() => {
@@ -30,7 +40,7 @@ export default function SearchScreen() {
   // Process debounced query
   React.useEffect(() => {
     if (debouncedQuery.length < 3) {
-      setPosts([]);
+      setPosts({posts: [], pagination: {after: undefined, page_number: 0}});
       wallpaperMutation.reset();
       return;
     }
@@ -44,15 +54,31 @@ export default function SearchScreen() {
   const wallpaperMutation = useMutation({
     mutationKey: ["wallpaper_search"],
     mutationFn: (query: string) => {
+      if (posts?.posts && posts?.posts.length > 0 && posts.pagination.after === null) {
+        return Promise.reject("[SafeError, EndOfPosts] No more to fetch.");
+      }
+      if (isMutationLock) {
+        return Promise.reject("[SafeError, Lock] Mutation is locked.");
+      }
+      // Lock the mutation
+      setIsMutationLock(true);
       // Fetch wallpapers
-      return getWallpapersFromSearch(query);
+      return getWallpapersFromSearch(query, (posts?.pagination.page_number ?? 0) + 1, posts?.pagination.after);
     },
     onSuccess: data => {
-      setPosts(data);
+      setPosts(prev => ({
+        posts:
+          (posts?.pagination.page_number ?? 0) > 0 && prev !== null && prev !== undefined
+            ? prev.posts.concat(data.posts)
+            : data.posts,
+        pagination: data.pagination,
+      }));
+      setIsMutationLock(false);
     },
     onError: error => {
       // TODO: Log this error somewhere
       console.error(error);
+      setIsMutationLock(false);
     },
   });
 
@@ -75,37 +101,20 @@ export default function SearchScreen() {
             </View>
           </View>
         </LinearGradient>
-        {wallpaperMutation.isSuccess ? (
-          <FlatList
-            numColumns={2}
-            keyExtractor={item => item.id}
-            data={posts}
-            className="z-0 w-full px-3 pt-20"
-            columnWrapperClassName="gap-4"
-            contentContainerClassName="gap-4"
-            renderItem={({item}) => <OnlineWallpaperGridItem {...item} />}
-            ListHeaderComponent={() => (
-              <View className="flex items-center w-full pb-2 border-b border-zinc-900">
-                <Text className="text-sm text-zinc-500">
-                  Found {posts?.length} wallpapers for '{debouncedQuery}'
-                </Text>
-              </View>
-            )}
-            ListFooterComponent={() => (
-              <View className="flex items-center justify-start w-full h-64 mb-16">
-                <Text className="px-4 pt-12 text-sm text-zinc-400">End of posts</Text>
-              </View>
-            )}
-          />
-        ) : wallpaperMutation.isPending ? (
-          <View className="absolute top-0 right-0 z-0 flex items-center justify-center w-full h-screen">
-            <LoadingSpinner size={48} color="#343434" />
-            <Text className="mt-2 text-sm font-bold text-zinc-600">Loading...</Text>
-          </View>
-        ) : (
+        {/* LOADING SPINNER */}
+        {wallpaperMutation.isPending && posts === null && (
+          <>
+            {/* show in center of screen */}
+            <View className="absolute top-0 right-0 z-0 flex items-center justify-center w-full h-screen">
+              <LoadingSpinner size={48} color="#343434" />
+              <Text className="mt-2 text-sm font-bold text-zinc-600">Loading...</Text>
+            </View>
+          </>
+        )}
+        {debouncedQuery.length < 3 ? (
           <>
             {store.rememberSearchHistory && (
-              <View className="z-10 flex flex-row flex-wrap items-center gap-3 px-4 mt-20 bg-background">
+              <View className="relative z-10 flex flex-row flex-wrap items-center gap-3 px-4 mt-20 bg-background">
                 <Text className="text-sm text-zinc-500">Recent searches</Text>
                 {store.searchHistory.length > 0 && (
                   <>
@@ -128,7 +137,65 @@ export default function SearchScreen() {
               <Text className="mt-2 font-bold text-zinc-600">Type in the search box above to get started</Text>
             </View>
           </>
+        ) : wallpaperMutation.isSuccess && posts?.posts.length === 0 ? (
+          <View className="absolute top-0 right-0 z-0 flex items-center justify-center w-full h-screen -mt-16">
+            <SearchX size={48} color="#565656" strokeWidth={1.25} />
+            <Text className="mt-2 font-bold text-zinc-600">No results found for '{debouncedQuery}'</Text>
+          </View>
+        ) : (
+          <></>
         )}
+        <FlatList
+          numColumns={2}
+          keyExtractor={item => item.id}
+          data={posts?.posts}
+          onEndReached={() => {
+            if (!wallpaperMutation.isPending) {
+              wallpaperMutation.mutate(debouncedQuery);
+            }
+          }}
+          className="z-0 w-full px-3 pt-20"
+          columnWrapperClassName="gap-4"
+          contentContainerClassName="gap-4"
+          renderItem={({item}) => <OnlineWallpaperGridItem {...item} />}
+          ListHeaderComponent={() =>
+            posts?.posts && posts.posts.length > 0 ? (
+              <View className="flex items-center w-full pb-2 border-b border-zinc-900">
+                <Text className="text-sm text-zinc-500">Results for '{debouncedQuery}'</Text>
+              </View>
+            ) : (
+              <></>
+            )
+          }
+          ListFooterComponent={() => {
+            if (posts?.posts && posts.posts.length > 0 && posts.pagination.after === null) {
+              return (
+                <View className="flex items-center justify-start w-full mb-16 h-72">
+                  <Text className="px-4 pt-12 text-sm text-zinc-400">End of posts for current filter</Text>
+                </View>
+              );
+            } else if ((posts?.pagination.page_number ?? 0) > 0 && posts?.pagination.after != null) {
+              return (
+                <View className="flex flex-col items-center justify-start w-full mb-16 h-72">
+                  <Animated.View style={fadingPulseAnimation(4500)}>
+                    <Text className="pt-12 text-sm text-zinc-200">Loading more...</Text>
+                  </Animated.View>
+                  <Button
+                    variant={"secondary"}
+                    size={"sm"}
+                    className="mt-4 opacity-60"
+                    onPress={() => {
+                      if (!wallpaperMutation.isPending) {
+                        wallpaperMutation.mutate(debouncedQuery);
+                      }
+                    }}>
+                    <ButtonText>Not loading?</ButtonText>
+                  </Button>
+                </View>
+              );
+            }
+          }}
+        />
       </View>
     </SafeAreaView>
   );
