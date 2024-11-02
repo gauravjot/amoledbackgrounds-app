@@ -14,6 +14,10 @@ import {CHANGELOG_URL, PLAY_STORE_URL, PRIVACY_POLICY_URL, SEARCH_HISTORY_LIMIT}
 import PlayStoreIcon from "@/assets/icons/play_store.svg";
 import {hasPermissionForStorage, openAppInDeviceSettings} from "@/modules/download-manager";
 import {Button} from "@/components/ui/Button";
+import {changeDailyWallpaperSort, changeDailyWallpaperType, registerDailyWallpaperService, unregisterDailyWallpaperService} from "@/modules/dailywallpaper";
+import {Asset} from "expo-asset";
+import * as FileSystem from "expo-file-system";
+import {getURIFromSort} from "../../lib/services/get_wallpapers";
 
 export default function SettingsScreen() {
   const store = useSettingsStore();
@@ -41,8 +45,22 @@ export default function SettingsScreen() {
               title="Daily Wallpaper"
               description="Sets the current trending wallpaper daily at the time you active this feature"
               isEnabled={store.isDailyWallpaperEnabled}
-              onChange={e => {
+              onChange={async e => {
                 store.setDailyWallpaperEnabled(e);
+                if (e) {
+                  const icon = Asset.fromModule(require("../../assets/images/icon.png"));
+                  await icon.downloadAsync();
+                  if (!icon.localUri) {
+                    return;
+                  }
+                  // Read file as base64
+                  const base64Icon = await FileSystem.readAsStringAsync(icon.localUri, {
+                    encoding: FileSystem.EncodingType.Base64,
+                  });
+                  registerDailyWallpaperService("online", getURIFromSort(store.dailyWallpaperSort), base64Icon);
+                } else {
+                  unregisterDailyWallpaperService();
+                }
               }}
             />
             {store.isDailyWallpaperEnabled && (
@@ -54,6 +72,7 @@ export default function SettingsScreen() {
                     options={DAILY_WALLPAPER_MODES}
                     onChange={e => {
                       store.setDailyWallpaperMode(e);
+                      changeDailyWallpaperType(e === "Online" ? "online" : "downloaded");
                     }}
                     width={140}
                   />
@@ -65,6 +84,7 @@ export default function SettingsScreen() {
                       options={Object.keys(SortOptions)}
                       onChange={e => {
                         store.setDailyWallpaperSort(SortOptions[e as keyof typeof SortOptions]);
+                        changeDailyWallpaperSort(getURIFromSort(SortOptions[e as keyof typeof SortOptions]));
                       }}
                       width={140}
                     />

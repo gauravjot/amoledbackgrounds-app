@@ -119,7 +119,7 @@ export function skipPost(post: {over_18: any; title: string; link_flair_text?: s
  * @param sort
  * @returns
  */
-function getURIFromSort(sort: SortOptions) {
+export function getURIFromSort(sort: SortOptions) {
   switch (sort) {
     case SortOptions.Hot:
       return "hot.json";

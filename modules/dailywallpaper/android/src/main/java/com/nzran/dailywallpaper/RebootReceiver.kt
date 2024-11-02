@@ -21,7 +21,7 @@ class RebootReceiver : BroadcastReceiver() {
                     // Reduce the time difference from 24 hours
                     val timeToSchedule = 24 * 60 * 60 * 1000 - timeDifference
                     // Schedule the service
-                    DailyWallpaperService.scheduleService(context, timeToSchedule)
+                    Utils.scheduleService(context, timeToSchedule)
                 }
             }
         }

@@ -1,7 +1,5 @@
 package com.nzran.dailywallpaper
 
-import android.content.Intent
-import androidx.core.content.ContextCompat.startForegroundService
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
 import androidx.preference.PreferenceManager
@@ -17,34 +15,61 @@ class DailyWallpaperModule : Module() {
     Name("DailyWallpaper")
 
     // Register for the daily wallpaper service
-    Function("registerDailyWallpaperService") { type: String, sort: String ->
-      val sharedPrefEditor = PreferenceManager.getDefaultSharedPreferences(context).edit()
+    Function("registerService") { type: String, sort: String, iconUri: String ->
+      val sharedPref = PreferenceManager.getDefaultSharedPreferences(context)
+      // Check if service is already enabled
+      if (sharedPref.getBoolean("enabled", false)) {
+        throw IllegalStateException("Service already enabled")
+      }
+      val sharedPrefEditor = sharedPref.edit()
       // Save in shared preferences
-      if (type == "online") {
-        sharedPrefEditor.putString("type", "online")
-        sharedPrefEditor.putString("sort", sort)
-      } else if (type == "downloaded") {
-        sharedPrefEditor.putString("type", "downloaded")
-      } else {
-        throw IllegalArgumentException("Invalid type")
+      when (type) {
+          "online" -> {
+            sharedPrefEditor.putString("type", "online")
+            sharedPrefEditor.putString("sort", sort)
+          }
+          "downloaded" -> {
+            sharedPrefEditor.putString("type", "downloaded")
+          }
+          else -> {
+            throw IllegalArgumentException("Invalid type")
+          }
       }
       sharedPrefEditor.putBoolean("enabled", true)
       sharedPrefEditor.putLong("timestamp", Date().time)
+      sharedPrefEditor.putString("iconUri", iconUri)
       sharedPrefEditor.apply()
 
       // Run daily starting now
-      startForegroundService(context, Intent(context, DailyWallpaperService::class.java))
+      JobHandler.performJob(context)
 
-      DailyWallpaperService.scheduleService(context);
+      // Schedule for next run
+      Utils.scheduleService(context)
     }
 
     // Unregister for the daily wallpaper service
-    Function("unregisterDailyWallpaperService") {
+    Function("unregisterService") {
       val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
       sharedPreferences.edit().putBoolean("enabled", false).apply()
       // Cancel the job scheduler
       val jobScheduler = context.getSystemService(JobScheduler::class.java)
-      jobScheduler.cancel(5799435)
+      jobScheduler.cancel(Utils.JOB_ID)
+    }
+
+    // Check if the daily wallpaper service is enabled
+    Function("isServiceEnabled") {
+      val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
+      return@Function sharedPreferences.getBoolean("enabled", false)
+    }
+
+    Function("changeType") { type: String ->
+        val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
+        sharedPreferences.edit().putString("type", type).apply()
+    }
+
+    Function("changeSort") { sort: String ->
+        val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
+        sharedPreferences.edit().putString("sort", sort).apply()
     }
 
     // Enables the module to be used as a native view. Definition components that are accepted as part of

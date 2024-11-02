@@ -172,7 +172,7 @@ class DownloadManagerModule : Module() {
   private var fileExtension: String = ""
 
   @SuppressLint("Range", "UnspecifiedRegisterReceiverFlag")
-  private fun downloadImage(context: Context, url: String, filename: String, fileExtension: String): Long {
+  fun downloadImage(context: Context, url: String, filename: String, fileExtension: String): Long {
     val downloadManager = context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
     val downloadUri = Uri.parse(url)
     this.filename = filename

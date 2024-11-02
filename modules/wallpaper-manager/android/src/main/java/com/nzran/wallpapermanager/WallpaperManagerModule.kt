@@ -1,5 +1,6 @@
 package com.nzran.wallpapermanager
 
+import android.annotation.SuppressLint
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
 import android.content.Context
@@ -49,6 +50,7 @@ class WallpaperManagerModule : Module() {
   }
 
 
+  @SuppressLint("MissingPermission")
   private fun setWallpaper(context: Context, path: String) {
     // Set wallpaper
     val wallpaperManager = WallpaperManager.getInstance(context)

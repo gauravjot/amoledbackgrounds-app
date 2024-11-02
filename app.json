@@ -37,6 +37,12 @@
             "deploymentTarget": "13.4"
           }
         }
+      ],
+      [
+        "expo-asset",
+        {
+          "assets": ["assets/images/icon.png"]
+        }
       ]
     ],
     "web": {
