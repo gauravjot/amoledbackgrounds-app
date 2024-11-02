@@ -18,7 +18,8 @@
         "android.permission.ACCESS_NETWORK_STATE",
         "android.permission.RECEIVE_BOOT_COMPLETED",
         "android.permission.SEND_DOWNLOAD_COMPLETED_INTENTS",
-        "android.permission.FOREGROUND_SERVICE"
+        "android.permission.FOREGROUND_SERVICE",
+        "android.permission.FOREGROUND_SERVICE_SPECIAL_USE"
       ],
       "package": "com.droidheat.amoledbackgrounds"
     },

@@ -1,26 +1,2 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
-    <application>
-        <!-- Register services -->
-        <service
-            android:name=".BackgroundService"
-            android:enabled="true"
-            android:exported="true"
-            android:permission="android.permission.BIND_JOB_SERVICE"
-            android:foregroundServiceType="shortService" />
-        <service
-            android:name=".JobHandler"
-            android:enabled="true"
-            android:exported="true"
-            android:permission="android.permission.BIND_JOB_SERVICE" />
-        <!-- Reboot receiver -->
-        <receiver
-            android:name=".RebootReceiver"
-            android:enabled="true"
-            android:exported="true"
-            android:permission="android.permission.RECEIVE_BOOT_COMPLETED">
-            <intent-filter>
-                <action android:name="android.intent.action.BOOT_COMPLETED" />
-            </intent-filter>
-        </receiver>
-    </application>
+<manifest>
 </manifest>

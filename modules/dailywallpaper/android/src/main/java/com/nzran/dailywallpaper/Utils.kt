@@ -4,9 +4,6 @@ import android.annotation.SuppressLint
 import android.app.DownloadManager
 import android.app.Notification
 import android.app.WallpaperManager
-import android.app.job.JobInfo
-import android.app.job.JobScheduler
-import android.content.ComponentName
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -26,8 +23,6 @@ import java.util.Scanner
 
 class Utils {
     companion object {
-        const val JOB_ID = 5799435
-
         fun getWallpaper(context: Context, type: String, sort: String = ""): Any? {
             when (type) {
                 "online" -> {
@@ -85,22 +80,6 @@ class Utils {
                     e.printStackTrace()
                 }
             }
-        }
-
-        fun scheduleService(context: Context, delay: Long = 0) {
-            var timeGap: Long = 1000 * 60 * 60 * 24 // 24 hours
-            if (delay > 0) {
-                timeGap = delay
-            }
-            // Alarm the service for tomorrow  tomorrow Date() + 1d
-            val serviceComponent = ComponentName(context.packageName, JobHandler::class.java.name)
-            val builder = JobInfo.Builder(JOB_ID, serviceComponent)
-            builder.setMinimumLatency(timeGap)
-            builder.setOverrideDeadline(timeGap)
-            builder.setRequiresCharging(false)
-            builder.setRequiresDeviceIdle(false)
-            val jobScheduler = context.getSystemService(JobScheduler::class.java)
-            jobScheduler.schedule(builder.build())
         }
 
         fun pushNotification(context: Context, channel: String, message: String, iconUri: String): Notification {

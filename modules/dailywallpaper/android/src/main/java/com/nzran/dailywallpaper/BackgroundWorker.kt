@@ -12,6 +12,7 @@ import androidx.preference.PreferenceManager
 import androidx.work.Worker
 import androidx.work.WorkerParameters
 
+
 // Worker class is used to perform background task
 
 class BackgroundWorker(context: Context, workerParams: WorkerParameters) :
@@ -19,8 +20,11 @@ class BackgroundWorker(context: Context, workerParams: WorkerParameters) :
     @SuppressLint("UnspecifiedRegisterReceiverFlag")
     override fun doWork(): Result {
         val sharedPrefs = PreferenceManager.getDefaultSharedPreferences(applicationContext)
-        // schedule the service
-        Utils.scheduleService(applicationContext)
+        Log.d(TAG, "Scheduled worker started")
+        if (!sharedPrefs.getBoolean("enabled", false)) {
+            Log.d(TAG, "Daily wallpaper is not enabled. Worker is exiting.")
+            return Result.success()
+        }
 
         // get the wallpaper
         Log.d(TAG, "Getting wallpaper")
@@ -54,7 +58,7 @@ class BackgroundWorker(context: Context, workerParams: WorkerParameters) :
             if (id == downloadId) {
                 // set wallpaper
                 Log.d(TAG, "Setting wallpaper")
-                Utils.setWallpaper(context, filepath!!);
+                Utils.setWallpaper(context, filepath!!)
                 // unregister receiver
                 context.unregisterReceiver(this)
             }
