@@ -61,7 +61,7 @@ export default function DownloadedWallpapersScreen() {
           <TopBar showLoader={false} title="Downloads">
             <Select
               options={["Old to New", "New to Old"]}
-              defaultValue="Old to New"
+              defaultValue={store.downloadedScreenSort}
               onChange={(value: string) => {
                 store.setDownloadedScreenSort(value as any);
                 if (flatListRef.current) flatListRef.current.scrollToOffset({offset: 0});

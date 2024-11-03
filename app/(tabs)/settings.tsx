@@ -113,7 +113,7 @@ export default function SettingsScreen() {
 
             <SettingSwitchComponent
               title="Remember Sort Preferences"
-              description="Remember the last sort preferences you used in Home and Downloads"
+              description="Remember the last sort preferences you used in Home tab"
               isEnabled={store.rememberSortPreferences}
               onChange={e => {
                 store.setRememberedSortPreferences(e);
