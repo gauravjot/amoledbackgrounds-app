@@ -14,7 +14,12 @@ import {CHANGELOG_URL, PLAY_STORE_URL, PRIVACY_POLICY_URL, SEARCH_HISTORY_LIMIT}
 import PlayStoreIcon from "@/assets/icons/play_store.svg";
 import {hasPermissionForStorage, openAppInDeviceSettings} from "@/modules/download-manager";
 import {Button} from "@/components/ui/Button";
-import {changeDailyWallpaperSort, changeDailyWallpaperType, registerDailyWallpaperService, unregisterDailyWallpaperService} from "@/modules/dailywallpaper";
+import {
+  changeDailyWallpaperSort,
+  changeDailyWallpaperType,
+  registerDailyWallpaperService,
+  unregisterDailyWallpaperService,
+} from "@/modules/dailywallpaper";
 import {Asset} from "expo-asset";
 import * as FileSystem from "expo-file-system";
 import {getURIFromSort} from "../../lib/services/get_wallpapers";
@@ -57,7 +62,11 @@ export default function SettingsScreen() {
                   const base64Icon = await FileSystem.readAsStringAsync(icon.localUri, {
                     encoding: FileSystem.EncodingType.Base64,
                   });
-                  registerDailyWallpaperService("online", getURIFromSort(store.dailyWallpaperSort), base64Icon);
+                  registerDailyWallpaperService(
+                    store.dailyWallpaperMode,
+                    getURIFromSort(store.dailyWallpaperSort),
+                    base64Icon,
+                  );
                 } else {
                   unregisterDailyWallpaperService();
                 }
@@ -68,17 +77,17 @@ export default function SettingsScreen() {
                 <Text className="flex-1 text-zinc-400">Select mode</Text>
                 <View>
                   <Select
-                    defaultValue={store.dailyWallpaperMode}
+                    defaultValue={store.dailyWallpaperMode === "online" ? "Online" : "Downloaded"}
                     options={DAILY_WALLPAPER_MODES}
                     onChange={e => {
-                      store.setDailyWallpaperMode(e);
-                      changeDailyWallpaperType(e === "Online" ? "online" : "downloaded");
+                      store.setDailyWallpaperMode(e.toLowerCase() as any);
+                      changeDailyWallpaperType(e.toLowerCase() === "online" ? "online" : "downloaded");
                     }}
                     width={140}
                   />
                 </View>
                 <View>
-                  {store.dailyWallpaperMode === "Online" && (
+                  {store.dailyWallpaperMode === "online" && (
                     <Select
                       defaultValue={store.dailyWallpaperSort}
                       options={Object.keys(SortOptions)}

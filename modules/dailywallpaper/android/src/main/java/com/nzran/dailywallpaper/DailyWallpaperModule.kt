@@ -6,6 +6,7 @@ import androidx.preference.PreferenceManager
 import android.util.Log
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequest
+import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import java.util.Date
 import java.util.UUID
@@ -27,34 +28,18 @@ class DailyWallpaperModule : Module() {
       }
       val sharedPrefEditor = sharedPref.edit()
       // Save in shared preferences
-      when (type) {
-          "online" -> {
-            sharedPrefEditor.putString("type", "online")
-            sharedPrefEditor.putString("sort", sort)
-          }
-          "downloaded" -> {
-            sharedPrefEditor.putString("type", "downloaded")
-          }
-          else -> {
-            throw IllegalArgumentException("Invalid type")
-          }
-      }
+      sharedPrefEditor.putString("type", type)
+      sharedPrefEditor.putString("sort", sort)
+      sharedPrefEditor.putString("iconUri", iconUri)
       sharedPrefEditor.putBoolean("enabled", true)
       sharedPrefEditor.putLong("timestamp", Date().time)
-      sharedPrefEditor.putString("iconUri", iconUri)
-      sharedPrefEditor.apply()
-
-      val workManager = WorkManager.getInstance(context)
 
       // Schedule the worker
-      val workRequest = PeriodicWorkRequest.Builder(
-        BackgroundWorker::class.java,
-        15,
-        java.util.concurrent.TimeUnit.MINUTES)
+      val workManager = WorkManager.getInstance(context)
+      val workRequest = PeriodicWorkRequestBuilder<BackgroundWorker>(15, java.util.concurrent.TimeUnit.MINUTES)
         .addTag("dailyWallpaper")
         .build()
       workManager.enqueueUniquePeriodicWork("dailyWallpaper", ExistingPeriodicWorkPolicy.REPLACE, workRequest)
-      sharedPrefEditor.putString("workId", workRequest.id.toString())
       sharedPrefEditor.apply()
     }
 
@@ -64,13 +49,9 @@ class DailyWallpaperModule : Module() {
       sharedPreferences.edit().putBoolean("enabled", false).apply()
       // Cancel the worker
       val workManager = WorkManager.getInstance(context)
-      try {
-        workManager.cancelWorkById(UUID.fromString(sharedPreferences.getString("workId", "")))
-        Log.d(TAG, "Worker cancelled")
-      } catch (e: IllegalArgumentException) {
-        workManager.cancelAllWork()
-        Log.d(TAG, "All Workers cancelled")
-      }
+      workManager.cancelAllWorkByTag("dailyWallpaper")
+      workManager.cancelUniqueWork("dailyWallpaper")
+      Log.d(TAG, "Worker cancelled")
     }
 
     // Check if the daily wallpaper service is enabled

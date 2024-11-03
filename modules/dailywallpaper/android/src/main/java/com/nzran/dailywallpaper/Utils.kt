@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.app.DownloadManager
 import android.app.Notification
 import android.app.WallpaperManager
+import android.content.ContentResolver
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -11,53 +12,57 @@ import android.graphics.ImageDecoder
 import android.media.MediaScannerConnection
 import android.net.Uri
 import android.os.Environment
+import android.provider.MediaStore
 import android.util.Base64
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.graphics.drawable.IconCompat
+import androidx.preference.PreferenceManager
 import org.json.JSONObject
 import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URL
+import java.util.ArrayList
 import java.util.Scanner
 
 class Utils {
     companion object {
-        fun getWallpaper(context: Context, type: String, sort: String = ""): Any? {
-            when (type) {
-                "online" -> {
-                    // get online wallpaper
-                    val wallpaper = getWallpaperFromReddit(sort)
-                    if (wallpaper != null) {
-                        val filepath = "/storage/emulated/0/Pictures/${wallpaper["title"]!!}.${wallpaper["extension"]!!}"
-                        return if (doesFileExist(filepath)) {
-                            // already downloaded
-                            filepath;
-                        } else {
-                            val item = HashMap<String, Any>()
-                            // start downloading the wallpaper and return the download id
-                            item["downloadId"] = downloadWallpaper(
-                                context,
-                                wallpaper["url"]!!,
-                                wallpaper["title"]!!,
-                                wallpaper["extension"]!!
-                            )
-                            item["path"] = filepath
-                            item;
-                        }
+
+        /**
+         * Get a wallpaper based on the type
+         * @param context The context
+         * @param type The type of wallpaper to get
+         * @param sort The sort parameter for online wallpapers
+         * @return Any of the following:
+         *- If type is online and wallpaper is downloading, returns a HashMap with downloadId and path.
+         *- If type is online and wallpaper is downloaded, returns the path of the wallpaper.
+         *- If type is downloaded, returns the path of the wallpaper.
+         *- If invalid, throws IllegalArgumentException.
+         */
+        fun getWallpaper(context: Context, type: String, sort: String = "new.json"): Any? {
+            if (type == "online") {
+                // get online wallpaper
+                val wallpaper = getWallpaperFromReddit(sort)
+                if (wallpaper != null) {
+                    val filepath = "/storage/emulated/0/Pictures/${wallpaper["title"]!!}.${wallpaper["extension"]!!}"
+                    return if (doesFileExist(filepath)) {
+                        filepath // already downloaded
                     } else {
-                        return null;
+                        val item = HashMap<String, Any>()
+                        // start downloading the wallpaper and return the download id
+                        item["downloadId"] = downloadWallpaper(
+                            context,
+                            wallpaper["url"]!!,
+                            wallpaper["title"]!!,
+                            wallpaper["extension"]!!
+                        )
+                        item["path"] = filepath
+                        return item
                     }
                 }
-                "downloaded" -> {
-                    // get downloaded wallpaper
-                    println("Getting downloaded wallpaper")
-                    return null;
-                }
-                else -> {
-                    throw IllegalArgumentException("Invalid type")
-                }
+                return null
             }
+            return getWallpaperFromStorage(context)
         }
 
         @SuppressLint("MissingPermission")
@@ -73,7 +78,7 @@ class Utils {
                 try {
                     val source: ImageDecoder.Source =
                         ImageDecoder.createSource(context.contentResolver, uri)
-                    val bitmap: Bitmap = ImageDecoder.decodeBitmap(source);
+                    val bitmap: Bitmap = ImageDecoder.decodeBitmap(source)
                     wallpaperManager.setBitmap(bitmap)
                 } catch (e: Exception) {
                     Log.e("WallpaperManagerModule", "Attempted to set wallpaper: $path")
@@ -140,15 +145,13 @@ class Utils {
                         .getJSONArray("resolutions").length() < 1) {
                     continue
                 }
-                val title = obj.getString("title").replace("\\(.*?\\) ?", "")
-                    .replace("\\[.*?\\] ?", "")
-                    .replace("\\{[^}]*\\}", "")
-                    .replace("\\u00A0", " ")
-                    .replace("[\\s\\s+]".toRegex(), " ")
-                    .replace(" ", "_")
-                    .replace("[^\\x00-\\x7F]".toRegex(), "")
-                    .replace("[/\\\\#,+()|~%'\":*?<>{}]".toRegex(), "")
+                val title = obj.getString("title").replace("[\\[(].*?[])]".toRegex(), "")
                     .trim()
+                    .replace("[^\\x00-\\x7F]".toRegex(), "")
+                    .replace("\\u00A0", " ")
+                    .replace("\\s{2,}".toRegex(), " ")
+                    .replace("[/\\\\#,+()|~%'\":*?<>{}]".toRegex(), "")
+                    .replace(" ", "_")
                 item["title"] = "${title}_-_${obj.getString("id")}_amoled_droidheat"
                 item["url"] = obj.getString("url")
                 item["extension"] = obj.getString("url").substringAfterLast(".")
@@ -176,6 +179,88 @@ class Utils {
                 ex.printStackTrace()
             }
             return json
+        }
+
+        /**
+         * Get a wallpaper from the storage that has not been set in the last 14 times
+         */
+        @SuppressLint("Range")
+        fun getWallpaperFromStorage(context: Context): String? {
+            val result = ArrayList<HashMap<String, String>>()
+            val contentResolver: ContentResolver = context.contentResolver
+            val projection = arrayOf(
+                MediaStore.Images.Media._ID,
+                MediaStore.Images.Media.DISPLAY_NAME,
+                MediaStore.Images.Media.RELATIVE_PATH
+            )
+            val selection = ""
+            val selectionArgs = arrayOf<String>()
+            val sortOrder = "${MediaStore.Images.Media.DATE_ADDED} ASC"
+
+            try {
+                val cursor = contentResolver.query(
+                    MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                    projection,
+                    selection,
+                    selectionArgs,
+                    sortOrder
+                )
+                if (cursor != null) {
+                    while (cursor.moveToNext()) {
+                        val name = cursor.getString(cursor.getColumnIndex(MediaStore.Images.Media.DISPLAY_NAME))
+                        if (!name.contains("amoled_droidheat")) {
+                            continue
+                        }
+                        val path = cursor.getString(cursor.getColumnIndex(MediaStore.Images.Media.RELATIVE_PATH))
+                        val fileMap = java.util.HashMap<String, String>()
+                        fileMap["name"] = name
+                        fileMap["path"] = "/storage/emulated/0/$path$name"
+                        result.add(fileMap)
+                    }
+                    cursor.close()
+                }
+            } catch (e: Exception) {
+                Log.e("DailyWallpaperUtils", "Failed to get downloaded files", e)
+            }
+
+            if (result.isEmpty()) {
+                return null
+            }
+
+            // Get a wallpaper that has not been set in last 14
+            val sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context)
+            var lastWallpaper = parseJsonToList(sharedPrefs.getString("lastWallpaper", "")!!)
+            if (sharedPrefs.contains("lastWallpaper")) {
+                for(i in 0 until result.size) {
+                    val hash = result[i]["path"].hashCode()
+                    if (!lastWallpaper.contains(hash)) {
+                        // remove the oldest wallpaper if the list is full
+                        if (lastWallpaper.size >= 14) {
+                            lastWallpaper = lastWallpaper.filterIndexed({ index, _ -> index != 0 })
+                        }
+                        // add the new wallpaper to the list
+                        sharedPrefs.edit().putString("lastWallpaper", jsonStringify(lastWallpaper.plus(hash))).apply()
+                        return result[i]["path"]!!
+                    }
+                }
+            }
+            // return random wallpaper
+            val randomIndex = (0 until result.size).random()
+            sharedPrefs.edit().putString("lastWallpaper", jsonStringify(lastWallpaper.plus(result[randomIndex]["path"].hashCode()))).apply()
+            return result[randomIndex]["path"]!!
+        }
+
+        // Function to JSON stringify a list of integers
+        private fun jsonStringify(intList: List<Int>): String {
+            return "[${intList.joinToString(",")}]"
+        }
+
+        // Function to parse JSON string back to a list of integers
+        private fun parseJsonToList(jsonString: String): List<Int> {
+            // Remove the brackets and split by comma
+            return jsonString.removeSurrounding("[", "]")
+                .split(",")
+                .mapNotNull { it -> it.trim().takeIf { it.isNotEmpty() }?.toInt() } // Convert each string to Int
         }
 
     }

@@ -16,8 +16,8 @@ export interface SettingsStore {
   clearSearchHistory: () => void;
   isDailyWallpaperEnabled: boolean;
   setDailyWallpaperEnabled: (enabled: boolean) => void;
-  dailyWallpaperMode: string;
-  setDailyWallpaperMode: (mode: string) => void;
+  dailyWallpaperMode: "online" | "downloaded";
+  setDailyWallpaperMode: (mode: "online" | "downloaded") => void;
   dailyWallpaperSort: SortOptions;
   setDailyWallpaperSort: (sort: SortOptions) => void;
   isLowerThumbnailQualityEnabled: boolean;
@@ -37,7 +37,7 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
       downloadedScreenSort: settings.downloadedScreenSort || "Old to New",
       searchHistory: settings.searchHistory || [],
       isDailyWallpaperEnabled: settings.isDailyWallpaperEnabled || false,
-      dailyWallpaperMode: settings.dailyWallpaperMode || "Online",
+      dailyWallpaperMode: settings.dailyWallpaperMode || "online",
       dailyWallpaperSort: settings.dailyWallpaperSort || SortOptions.Hot,
       isLowerThumbnailQualityEnabled: settings.isLowerThumbnailQualityEnabled || false,
       rememberSortPreferences: settings.rememberSortPreferences || false,
@@ -94,7 +94,7 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
     await AsyncStorage.setItem("settings", JSON.stringify(newSettings));
     set(newSettings);
   },
-  dailyWallpaperMode: "Online",
+  dailyWallpaperMode: "online",
   setDailyWallpaperMode: async (mode: string) => {
     const currentSettings = await getSettings();
     const newSettings = {...currentSettings, dailyWallpaperMode: mode};
