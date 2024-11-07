@@ -4,8 +4,14 @@ import {PaginationType, WallpaperImageType, WallpaperPostType} from "./wallpaper
 import {htmlDecode, removeParenthesisData, skipPost} from "./get_wallpapers";
 import {WALLPAPER_MIN_ALLOWED_HEIGHT, WALLPAPER_MIN_ALLOWED_WIDTH} from "@/appconfig";
 import urlJoin from "url-join";
+import * as SqlUtility from "@/lib/utils/sql";
 
-export const getWallpapersFromSearch = async (query: string, page: number, after: string | undefined) => {
+export const getWallpapersFromSearch = async (
+  query: string,
+  page: number,
+  after: string | undefined,
+  deviceIdentifier: string,
+) => {
   const url = SearchURL(query, page, after);
 
   return await axios.get(url).then(response => {
@@ -65,9 +71,25 @@ export const getWallpapersFromSearch = async (query: string, page: number, after
             comments_link: urlJoin(WALLPAPERS_URL, "comments", post.id + ".json"),
           };
           posts.push(wallpaperPost);
-        } catch (e) {
-          // TODO: Log this error somewhere
-          console.log(e);
+        } catch (error) {
+          // Log error
+          SqlUtility.insertErrorLog(
+            {
+              file: "lib/services/search_wallapers.ts[getWallpapers]",
+              description: "Error processing post",
+              error_title: error instanceof Error ? error.name : "",
+              method: "searchWallpapers",
+              params: JSON.stringify({
+                query: query,
+                after: after,
+                page: page,
+                post: post,
+              }),
+              severity: "error",
+              stacktrace: error instanceof Error ? error.stack || error.message : "",
+            },
+            deviceIdentifier,
+          );
           console.log(JSON.stringify(post));
         }
       }

@@ -10,6 +10,7 @@ import {DarkTheme, ThemeProvider} from "@react-navigation/native";
 import {useSettingsStore} from "@/store/settings";
 import {useDownloadedWallpapersStore} from "@/store/downloaded_wallpapers";
 import {Platform} from "react-native";
+import {SQLiteProvider} from "expo-sqlite";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -22,6 +23,7 @@ export default function RootLayout() {
   const settingsStore = useSettingsStore();
   const downloadedStore = useDownloadedWallpapersStore();
   useEffect(() => {
+    // Initialize stores
     settingsStore.initialize();
     if (Platform.OS === "android") {
       downloadedStore.initialize();
@@ -53,10 +55,12 @@ export default function RootLayout() {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider value={DarkTheme}>
-        <Stack
-          initialRouteName="(tabs)"
-          screenOptions={{headerShown: false, contentStyle: {backgroundColor: "#000000"}}}
-        />
+        <SQLiteProvider databaseName="mysqlite.db" assetSource={{assetId: require("../assets/db/mysqlite.db")}}>
+          <Stack
+            initialRouteName="(tabs)"
+            screenOptions={{headerShown: false, contentStyle: {backgroundColor: "#000000"}}}
+          />
+        </SQLiteProvider>
       </ThemeProvider>
     </QueryClientProvider>
   );

@@ -9,3 +9,4 @@ export const PRIVACY_POLICY_URL = "https://droidheat.nzran.com/amoledbackgrounds
 export const PLAY_STORE_URL = "https://play.google.com/store/apps/details?id=com.droidheat.amoledbackgrounds";
 export const CHANGELOG_URL =
   "https://gauravjot.com/md-render?url=https://raw.githubusercontent.com/gauravjot/amoledbackgrounds-app/refs/heads/master/docs/changelog.md&hide_footer=true";
+export const SEND_ERROR_LOGS_URL = "https://bigsur.nzran.com/api/error_logger/bulk_report/";

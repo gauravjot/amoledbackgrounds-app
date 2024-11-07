@@ -52,7 +52,9 @@
     "url-join": "^5.0.0",
     "zustand": "^5.0.0",
     "expo-asset": "~10.0.10",
-    "expo-file-system": "~17.0.1"
+    "expo-file-system": "~17.0.1",
+    "expo-sqlite": "~14.0.6",
+    "expo-device": "~6.0.2"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",

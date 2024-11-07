@@ -25,6 +25,7 @@ import {LinearGradient} from "expo-linear-gradient";
 import * as DownloadManager from "@/modules/download-manager";
 import {ToastAndroid} from "react-native";
 import {useSettingsStore} from "@/store/settings";
+import * as SqlUtility from "@/lib/utils/sql";
 
 type DownloadState = {
   status: "idle" | "downloading" | "complete" | "error_finishing" | "error_starting";
@@ -106,9 +107,24 @@ export default function DownloadScreen() {
       if (downloading > -1) {
         setDownloadState({status: "downloading", progress: 0});
       }
-    } catch (e) {
-      // TODO: Log this exception
-      console.log(e);
+    } catch (error) {
+      // Log error
+      SqlUtility.insertErrorLog(
+        {
+          file: "download.tsx[DownloadScreen.tsx]",
+          description: "Error while downloading wallpaper",
+          error_title: error instanceof Error ? error.name : "Downloading wallpaper fail",
+          method: "downloadUsingNative",
+          params: JSON.stringify({
+            url: wallpaper.image.url,
+            filename: filename,
+            file_extension: file_extension,
+          }),
+          severity: "error",
+          stacktrace: error instanceof Error ? error.stack || error.message : "",
+        },
+        settingStore.deviceIdentifier,
+      );
       setDownloadState({status: "error_starting", progress: null});
     }
   }
@@ -158,9 +174,22 @@ export default function DownloadScreen() {
     try {
       setApplyState("applying");
       await setWallpaper(fileSystemPath as string);
-    } catch (e) {
-      // TODO: Log this error somewhere
-      console.log(e);
+    } catch (error) {
+      // Log error
+      SqlUtility.insertErrorLog(
+        {
+          file: "download.tsx[DownloadScreen.tsx]",
+          description: "Error while applying wallpaper",
+          error_title: error instanceof Error ? error.name : "Applying wallpaper fail",
+          method: "applyWallpaper",
+          params: JSON.stringify({
+            fileSystemPath: fileSystemPath,
+          }),
+          severity: "error",
+          stacktrace: error instanceof Error ? error.stack || error.message : "",
+        },
+        settingStore.deviceIdentifier,
+      );
     }
   }
 

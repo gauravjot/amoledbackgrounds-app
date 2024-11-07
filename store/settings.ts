@@ -5,6 +5,7 @@ import {create} from "zustand";
 
 export interface SettingsStore {
   initialize: () => Promise<void>;
+  deviceIdentifier: string;
   downloadDir: string | null;
   setDownloadDir: (dir: string | null) => void;
   homeSort: SortOptions;
@@ -26,12 +27,30 @@ export interface SettingsStore {
   setRememberedSortPreferences: (e: boolean) => void;
   rememberSearchHistory: boolean;
   setRememberedSearchHistory: (e: boolean) => void;
+  sendErrorLogsEnabled: boolean;
+  setSendErrorLogsEnabled: (e: boolean) => void;
+  logsLastSent: string | null;
+  setLogsLastSent: (date: Date | null) => void;
 }
 
 export const useSettingsStore = create<SettingsStore>((set, get) => ({
   initialize: async () => {
     const settings = await getSettings();
+    let device_identifier = settings.deviceIdentifier;
+    if (settings.deviceIdentifier === null || settings.deviceIdentifier === undefined) {
+      // Generate a new device identifier
+      device_identifier = Math.random()
+        .toString(36)
+        .substring(2, 15)
+        .toUpperCase()
+        .replaceAll("0", "Q")
+        .replaceAll("O", "P")
+        .replaceAll("I", "J");
+      const newSettings = {...settings, deviceIdentifier: device_identifier};
+      await AsyncStorage.setItem("settings", JSON.stringify(newSettings));
+    }
     set({
+      deviceIdentifier: device_identifier,
       downloadDir: settings.downloadDir,
       homeSort: settings.homeSort || SortOptions.Hot,
       downloadedScreenSort: settings.downloadedScreenSort || "Old to New",
@@ -42,8 +61,12 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
       isLowerThumbnailQualityEnabled: settings.isLowerThumbnailQualityEnabled || false,
       rememberSortPreferences: settings.rememberSortPreferences || false,
       rememberSearchHistory: settings.rememberSearchHistory || true,
+      sendErrorLogsEnabled: settings.sendErrorLogsEnabled || true,
+      logsLastSent: settings.logsLastSent || null,
     });
   },
+
+  deviceIdentifier: "",
 
   downloadDir: null,
   setDownloadDir: async (dir: string | null) => {
@@ -129,6 +152,21 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
   setRememberedSearchHistory: async (e: boolean) => {
     const currentSettings = await getSettings();
     const newSettings = {...currentSettings, rememberSearchHistory: e};
+    await AsyncStorage.setItem("settings", JSON.stringify(newSettings));
+    set(newSettings);
+  },
+
+  sendErrorLogsEnabled: true,
+  setSendErrorLogsEnabled: async (e: boolean) => {
+    const currentSettings = await getSettings();
+    const newSettings = {...currentSettings, sendErrorLogsEnabled: e};
+    await AsyncStorage.setItem("settings", JSON.stringify(newSettings));
+    set(newSettings);
+  },
+  logsLastSent: null,
+  setLogsLastSent: async (date: Date | null) => {
+    const currentSettings = await getSettings();
+    const newSettings = {...currentSettings, logsLastSent: date ? date.toISOString().toString() : null};
     await AsyncStorage.setItem("settings", JSON.stringify(newSettings));
     set(newSettings);
   },

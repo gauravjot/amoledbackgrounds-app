@@ -23,6 +23,7 @@ import {
 import {Asset} from "expo-asset";
 import * as FileSystem from "expo-file-system";
 import {getURIFromSort} from "../../lib/services/get_wallpapers";
+import {timeSince} from "@/lib/utils/time_since";
 
 export default function SettingsScreen() {
   const store = useSettingsStore();
@@ -140,6 +141,18 @@ export default function SettingsScreen() {
               }}
             />
 
+            <SettingSwitchComponent
+              title="Send Error Logs"
+              description={
+                "Send error logs to the developer to help improve the app. No personal information is sent." +
+                (store.logsLastSent ? "Logs last sent: " + timeSince(new Date(store.logsLastSent)) : "")
+              }
+              isEnabled={store.sendErrorLogsEnabled}
+              onChange={e => {
+                store.setSendErrorLogsEnabled(e);
+              }}
+            />
+
             <Pressable
               className="p-4 active:bg-foreground/10"
               onPress={async () => {
@@ -161,6 +174,7 @@ export default function SettingsScreen() {
                 Version {Constants.expoConfig?.version ?? "Unknown"}{" "}
                 {Constants.expoConfig?.extra?.commit && `(${Constants.expoConfig?.extra?.commit.slice(0, 7)})`}
               </Text>
+              <Text className="text-zinc-400">Installation {store.deviceIdentifier}</Text>
             </View>
           </View>
         </ScrollView>

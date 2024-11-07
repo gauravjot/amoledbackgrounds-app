@@ -15,6 +15,7 @@ import {useSettingsStore} from "@/store/settings";
 import {Button, ButtonText} from "@/components/ui/Button";
 import {fadingPulseAnimation} from "@/lib/animations/fading_pulse";
 import Animated from "react-native-reanimated";
+import * as SqlUtility from "@/lib/utils/sql";
 
 type PostsType = {
   posts: WallpaperPostType[];
@@ -76,8 +77,22 @@ export default function SearchScreen() {
       setIsMutationLock(false);
     },
     onError: error => {
-      // TODO: Log this error somewhere
-      console.error(error);
+      // Log error
+      SqlUtility.insertErrorLog(
+        {
+          file: "(tabs)/search.tsx[SearchScreen.tsx]",
+          description: error.message,
+          error_title: "Wallpaper Fetch Error",
+          method: "wallpaperMutation",
+          params: JSON.stringify({
+            query: query,
+            pagination: posts?.pagination,
+          }),
+          severity: "error",
+          stacktrace: error.stack || "",
+        },
+        store.deviceIdentifier,
+      );
       setIsMutationLock(false);
     },
   });

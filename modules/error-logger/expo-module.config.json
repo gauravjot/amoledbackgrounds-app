@@ -1,9 +1,0 @@
-{
-  "platforms": ["ios", "tvos", "android", "web"],
-  "ios": {
-    "modules": ["ErrorLoggerModule"]
-  },
-  "android": {
-    "modules": ["com.nzran.errorlogger.ErrorLoggerModule"]
-  }
-}

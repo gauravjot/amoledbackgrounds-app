@@ -15,6 +15,8 @@ import {useSettingsStore} from "@/store/settings";
 import {SortOptions} from "@/constants/sort_options";
 import Select from "@/components/ui/Select";
 import TopBar from "@/components/ui/TopBar";
+import * as SqlUtility from "@/lib/utils/sql";
+import SendErrorLogs from "@/lib/services/send_error_logs";
 
 type PostsType = {
   posts: WallpaperPostType[];
@@ -47,6 +49,7 @@ export default function HomeScreen() {
         sort,
         posts?.pagination.after,
         posts?.pagination.page_number ? posts.pagination.page_number + 1 : 1,
+        store.deviceIdentifier,
       );
     },
     onSuccess: data => {
@@ -61,8 +64,22 @@ export default function HomeScreen() {
       setIsMutationLock(false);
     },
     onError: error => {
-      // TODO: Log this error somewhere
-      console.error(error);
+      // Log error
+      SqlUtility.insertErrorLog(
+        {
+          file: "(tabs)/index.tsx[HomeScreen.tsx]",
+          description: error.message,
+          error_title: "Wallpaper Fetch Error",
+          method: "wallpaperMutation",
+          params: JSON.stringify({
+            sort: sort,
+            pagination: posts?.pagination,
+          }),
+          severity: "error",
+          stacktrace: error.stack || "",
+        },
+        store.deviceIdentifier,
+      );
       setIsMutationLock(false);
     },
   });
@@ -167,6 +184,29 @@ export default function HomeScreen() {
           }}
         />
       </View>
+      <SendLogs isSendLogsEnabled={store.sendErrorLogsEnabled} />
     </SafeAreaView>
   );
+}
+
+function SendLogs({isSendLogsEnabled}: {isSendLogsEnabled: boolean}) {
+  const store = useSettingsStore();
+
+  React.useEffect(() => {
+    const lastDateSent: string | null = store.logsLastSent;
+    const currentDate = new Date();
+    const lastDate = lastDateSent ? new Date(lastDateSent) : new Date();
+    const diffDays = (currentDate.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24);
+
+    async function send() {
+      if (isSendLogsEnabled && diffDays >= 1) {
+        await SendErrorLogs(isSendLogsEnabled);
+        store.setLogsLastSent(currentDate);
+      }
+    }
+
+    send();
+  }, []);
+
+  return <></>;
 }

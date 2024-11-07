@@ -14,7 +14,6 @@ import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import Select from "@/components/ui/Select";
 import {useSettingsStore} from "@/store/settings";
 import {hasPermissionForStorage, requestStoragePermissionsAsync} from "@/modules/download-manager";
-import {DownloadedWallpaperStore} from "../../store/downloaded_wallpapers";
 
 type WallpaperApplyState = {
   status: "idle" | "applying" | "applied" | "error";
