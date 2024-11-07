@@ -54,7 +54,7 @@ export type RequiredErrorLog = Omit<
 
 export const insertErrorLog = async (errorLog: RequiredErrorLog, deviceIdentifier: string) => {
   const db = await SQLite.openDatabaseAsync(DB_NAME);
-  await db.execAsync(`
+  const query = `
     INSERT INTO errorlogs (
       app_name,
       error_title,
@@ -71,12 +71,12 @@ export const insertErrorLog = async (errorLog: RequiredErrorLog, deviceIdentifie
       device_name
     ) VALUES (
       "${APP_NAME}",
-      "${errorLog.error_title}",
-      "${errorLog.description}",
-      "${errorLog.file}",
-      "${errorLog.method}",
-      "${errorLog.stacktrace}",
-      "${errorLog.params}",
+      "${esip(errorLog.error_title)}",
+      "${esip(errorLog.description)}",
+      "${esip(errorLog.file)}",
+      "${esip(errorLog.method)}",
+      "${esip(errorLog.stacktrace)}",
+      "${esip(errorLog.params)}",
       "${errorLog.severity}",
       "${new Date().toISOString()}",
       "${deviceIdentifier}",
@@ -84,7 +84,8 @@ export const insertErrorLog = async (errorLog: RequiredErrorLog, deviceIdentifie
       ${DEVICE_PLATFORM},
       "${DEVICE_NAME}"
     );
-  `);
+  `;
+  await db.execAsync(query);
 };
 
 export const getAllErrorLogs = async (): Promise<ErrorLog[]> => {
@@ -99,4 +100,8 @@ export const getAllErrorLogs = async (): Promise<ErrorLog[]> => {
 export const deleteAllErrorLogs = async () => {
   const db = await SQLite.openDatabaseAsync(DB_NAME);
   await db.execAsync("DELETE FROM errorlogs");
+};
+
+const esip = (val: string | null) => {
+  return val ? val.toString().replace(/"/g, '""') : val;
 };

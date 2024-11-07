@@ -65,21 +65,23 @@ export default function HomeScreen() {
     },
     onError: error => {
       // Log error
-      SqlUtility.insertErrorLog(
-        {
-          file: "(tabs)/index.tsx[HomeScreen.tsx]",
-          description: error.message,
-          error_title: "Wallpaper Fetch Error",
-          method: "wallpaperMutation",
-          params: JSON.stringify({
-            sort: sort,
-            pagination: posts?.pagination,
-          }),
-          severity: "error",
-          stacktrace: error.stack || "",
-        },
-        store.deviceIdentifier,
-      );
+      if (!error.toString().toLowerCase().includes("safeerror")) {
+        SqlUtility.insertErrorLog(
+          {
+            file: "(tabs)/index.tsx[HomeScreen.tsx]",
+            description: error.message,
+            error_title: "Wallpaper Fetch Error",
+            method: "wallpaperMutation",
+            params: JSON.stringify({
+              sort: sort,
+              pagination: posts?.pagination,
+            }),
+            severity: "error",
+            stacktrace: error.stack || "",
+          },
+          store.deviceIdentifier,
+        );
+      }
       setIsMutationLock(false);
     },
   });
@@ -195,13 +197,18 @@ function SendLogs({isSendLogsEnabled}: {isSendLogsEnabled: boolean}) {
   React.useEffect(() => {
     const lastDateSent: string | null = store.logsLastSent;
     const currentDate = new Date();
-    const lastDate = lastDateSent ? new Date(lastDateSent) : new Date();
-    const diffDays = (currentDate.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24);
+    const diffDays = lastDateSent
+      ? (currentDate.getTime() - new Date(lastDateSent).getTime()) / (1000 * 60 * 60 * 24)
+      : 1;
 
     async function send() {
+      // const success = await SendErrorLogs(isSendLogsEnabled);
+      // console.log(success);
       if (isSendLogsEnabled && diffDays >= 1) {
-        await SendErrorLogs(isSendLogsEnabled);
-        store.setLogsLastSent(currentDate);
+        const success = await SendErrorLogs(isSendLogsEnabled);
+        if (success) {
+          store.setLogsLastSent(currentDate);
+        }
       }
     }
 

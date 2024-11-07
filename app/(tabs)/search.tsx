@@ -64,7 +64,12 @@ export default function SearchScreen() {
       // Lock the mutation
       setIsMutationLock(true);
       // Fetch wallpapers
-      return getWallpapersFromSearch(query, (posts?.pagination.page_number ?? 0) + 1, posts?.pagination.after);
+      return getWallpapersFromSearch(
+        query,
+        (posts?.pagination.page_number ?? 0) + 1,
+        posts?.pagination.after,
+        store.deviceIdentifier,
+      );
     },
     onSuccess: data => {
       setPosts(prev => ({
@@ -78,21 +83,23 @@ export default function SearchScreen() {
     },
     onError: error => {
       // Log error
-      SqlUtility.insertErrorLog(
-        {
-          file: "(tabs)/search.tsx[SearchScreen.tsx]",
-          description: error.message,
-          error_title: "Wallpaper Fetch Error",
-          method: "wallpaperMutation",
-          params: JSON.stringify({
-            query: query,
-            pagination: posts?.pagination,
-          }),
-          severity: "error",
-          stacktrace: error.stack || "",
-        },
-        store.deviceIdentifier,
-      );
+      if (!error.toString().toLowerCase().includes("safeerror")) {
+        SqlUtility.insertErrorLog(
+          {
+            file: "(tabs)/search.tsx[SearchScreen]",
+            description: error.message,
+            error_title: "Wallpaper Fetch Error",
+            method: "wallpaperMutation",
+            params: JSON.stringify({
+              query: query,
+              pagination: posts?.pagination,
+            }),
+            severity: "error",
+            stacktrace: error.stack || "",
+          },
+          store.deviceIdentifier,
+        );
+      }
       setIsMutationLock(false);
     },
   });

@@ -145,7 +145,7 @@ export default function SettingsScreen() {
               title="Send Error Logs"
               description={
                 "Send error logs to the developer to help improve the app. No personal information is sent." +
-                (store.logsLastSent ? "Logs last sent: " + timeSince(new Date(store.logsLastSent)) : "")
+                (store.logsLastSent ? ` (Last sent:${timeSince(new Date(store.logsLastSent))})` : "")
               }
               isEnabled={store.sendErrorLogsEnabled}
               onChange={e => {

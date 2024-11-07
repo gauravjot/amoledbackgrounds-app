@@ -2,17 +2,21 @@ import {SEND_ERROR_LOGS_URL} from "@/appconfig";
 import axios from "axios";
 import * as SqlUtility from "@/lib/utils/sql";
 
-export default async function SendErrorLogs(isSendingEnabled: boolean) {
+export default async function SendErrorLogs(isSendingEnabled: boolean): Promise<boolean> {
   if (!isSendingEnabled) {
-    return;
+    return false;
   }
   const logs = await SqlUtility.getAllErrorLogs();
   if (logs.length > 0) {
-    await axios.post(SEND_ERROR_LOGS_URL, SqlUtility.getAllErrorLogs(), {
+    const result = await axios.post(SEND_ERROR_LOGS_URL, await SqlUtility.getAllErrorLogs(), {
       headers: {
         "Content-Type": "application/json",
       },
     });
-    await SqlUtility.deleteAllErrorLogs();
+    if (result.status === 204) {
+      await SqlUtility.deleteAllErrorLogs();
+      return true;
+    }
   }
+  return false;
 }
