@@ -63,7 +63,7 @@ export default function Select({
             <Button
               key={o}
               variant={"ghost"}
-              className={`justify-start text-base ${o === selected ? "bg-accent" : ""}`}
+              className={`justify-start h-12 text-base ${o === selected ? "bg-accent" : ""}`}
               style={{minWidth: 110}}
               onPress={() => {
                 setIsOpen(false);

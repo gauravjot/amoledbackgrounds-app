@@ -215,7 +215,7 @@ export default function DownloadScreen() {
             <Button
               variant={"ghost"}
               size={"icon"}
-              className="w-10 h-10 m-3 rounded-lg bg-background/40"
+              className="w-12 h-12 m-2 rounded-lg bg-background/40"
               onPress={() => router.back()}>
               <ArrowLeft size={24} color="white" strokeWidth={1.5} />
             </Button>

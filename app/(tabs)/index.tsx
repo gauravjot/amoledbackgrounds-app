@@ -202,8 +202,6 @@ function SendLogs({isSendLogsEnabled}: {isSendLogsEnabled: boolean}) {
       : 1;
 
     async function send() {
-      // const success = await SendErrorLogs(isSendLogsEnabled);
-      // console.log(success);
       if (isSendLogsEnabled && diffDays >= 1) {
         const success = await SendErrorLogs(isSendLogsEnabled);
         if (success) {

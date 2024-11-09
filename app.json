@@ -2,9 +2,9 @@
   "expo": {
     "name": "AmoledBackgrounds",
     "slug": "amoledbackgrounds-app",
-    "version": "2.0.0-rc2",
+    "version": "2.0.0-rc3",
     "android": {
-      "versionCode": 30,
+      "versionCode": 31,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#000000"

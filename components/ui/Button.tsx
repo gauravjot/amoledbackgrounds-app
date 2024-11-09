@@ -16,11 +16,11 @@ const buttonVariants = cva("group flex items-center gap-2 justify-center rounded
       emerald: "bg-emerald-700 active:bg-emerald-800",
     },
     size: {
-      default: "h-12 px-5",
+      default: "h-14 px-5",
       xs: "h-6 px-2",
       sm: "h-8 px-3",
       md: "h-10 px-5",
-      lg: "px-8 h-14",
+      lg: "px-8 h-16",
       icon: "h-10 w-10",
     },
     flex: {

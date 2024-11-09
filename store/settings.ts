@@ -1,5 +1,6 @@
 import {SEARCH_HISTORY_LIMIT} from "@/appconfig";
 import {SortOptions} from "@/constants/sort_options";
+import generateUUID from "@/lib/utils/uuid";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {create} from "zustand";
 
@@ -27,10 +28,18 @@ export interface SettingsStore {
   setRememberedSortPreferences: (e: boolean) => void;
   rememberSearchHistory: boolean;
   setRememberedSearchHistory: (e: boolean) => void;
+
+  // Error Logs
   sendErrorLogsEnabled: boolean;
   setSendErrorLogsEnabled: (e: boolean) => void;
   logsLastSent: string | null;
   setLogsLastSent: (date: Date | null) => void;
+
+  // Privacy Policy
+  IsPrivacyPolicyAccepted: boolean;
+  setPrivacyPolicyAccepted: (accepted: boolean) => void;
+  PrivacyPolicyAcceptedVersion: string | null;
+  setPrivacyPolicyAcceptedVersion: (version: string | null) => void;
 }
 
 export const useSettingsStore = create<SettingsStore>((set, get) => ({
@@ -39,13 +48,7 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
     let device_identifier = settings.deviceIdentifier;
     if (settings.deviceIdentifier === null || settings.deviceIdentifier === undefined) {
       // Generate a new device identifier
-      device_identifier = Math.random()
-        .toString(36)
-        .substring(2, 15)
-        .toUpperCase()
-        .replaceAll("0", "Q")
-        .replaceAll("O", "P")
-        .replaceAll("I", "J");
+      device_identifier = generateUUID();
       const newSettings = {...settings, deviceIdentifier: device_identifier};
       await AsyncStorage.setItem("settings", JSON.stringify(newSettings));
     }
@@ -63,6 +66,8 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
       rememberSearchHistory: settings.rememberSearchHistory || true,
       sendErrorLogsEnabled: settings.sendErrorLogsEnabled || true,
       logsLastSent: settings.logsLastSent || null,
+      IsPrivacyPolicyAccepted: settings.IsPrivacyPolicyAccepted || false,
+      PrivacyPolicyAcceptedVersion: settings.PrivacyPolicyAcceptedVersion || null,
     });
   },
 
@@ -167,6 +172,21 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
   setLogsLastSent: async (date: Date | null) => {
     const currentSettings = await getSettings();
     const newSettings = {...currentSettings, logsLastSent: date ? date.toISOString().toString() : null};
+    await AsyncStorage.setItem("settings", JSON.stringify(newSettings));
+    set(newSettings);
+  },
+
+  IsPrivacyPolicyAccepted: false,
+  setPrivacyPolicyAccepted: async (e: boolean) => {
+    const currentSettings = await getSettings();
+    const newSettings = {...currentSettings, IsPrivacyPolicyAccepted: e};
+    await AsyncStorage.setItem("settings", JSON.stringify(newSettings));
+    set(newSettings);
+  },
+  PrivacyPolicyAcceptedVersion: null,
+  setPrivacyPolicyAcceptedVersion: async (version: string | null) => {
+    const currentSettings = await getSettings();
+    const newSettings = {...currentSettings, PrivacyPolicyAcceptedVersion: version};
     await AsyncStorage.setItem("settings", JSON.stringify(newSettings));
     set(newSettings);
   },

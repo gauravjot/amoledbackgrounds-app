@@ -1,12 +1,12 @@
-import {FlatList, Image, ToastAndroid, View} from "react-native";
+import {FlatList, Image, Pressable, ToastAndroid, View} from "react-native";
 import React from "react";
 import {Text} from "@/components/ui/Text";
 import {SafeAreaView} from "react-native-safe-area-context";
 import {DownloadedWallpaperPostType, useDownloadedWallpapersStore} from "@/store/downloaded_wallpapers";
 import TopBar from "@/components/ui/TopBar";
-import Animated from "react-native-reanimated";
+import Animated, {useAnimatedStyle, withDelay, withTiming} from "react-native-reanimated";
 import {Button, ButtonText} from "@/components/ui/Button";
-import {CheckCircle, ImageIcon} from "lucide-react-native";
+import {CheckCircle, ImageIcon, MoreVertical, Trash2} from "lucide-react-native";
 import * as WallpaperManager from "@/modules/wallpaper-manager";
 import {fadingPulseAnimation} from "@/lib/animations/fading_pulse";
 import {onChangeListener} from "../../modules/wallpaper-manager/index";
@@ -25,7 +25,7 @@ export default function DownloadedWallpapersScreen() {
   const DownloadedWallpaperStore = useDownloadedWallpapersStore();
   const [applyState, setApplyState] = React.useState<WallpaperApplyState>({status: "idle", path: ""});
   const flatListRef = React.useRef<FlatList>(null);
-  let posts = useDownloadedWallpapersStore().files;
+  let posts = DownloadedWallpaperStore.files;
 
   // Listeners
   React.useEffect(() => {
@@ -34,7 +34,7 @@ export default function DownloadedWallpapersScreen() {
       if (!hasPermissionForStorage()) {
         await requestStoragePermissionsAsync();
         await DownloadedWallpaperStore.initialize();
-        posts = useDownloadedWallpapersStore().files;
+        posts = DownloadedWallpaperStore.files;
       }
     };
     runPermissions();
@@ -106,6 +106,24 @@ function WallpaperGridItem({
   applyState: "idle" | "applying" | "applied" | "error";
   applyWallpaper: () => void;
 }) {
+  const [isOpen, setIsOpen] = React.useState(false);
+
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      marginBottom: withTiming(isOpen ? 10 : 0, {
+        duration: 200,
+      }),
+      opacity: withDelay(
+        50,
+        withTiming(isOpen ? 1 : 0, {
+          duration: 100,
+        }),
+      ),
+      display: isOpen ? "flex" : "none",
+      width: 120,
+    };
+  });
+
   return (
     <View className="pb-2" style={{flex: 0.5}}>
       <View className="flex flex-col h-[26rem]">
@@ -117,9 +135,6 @@ function WallpaperGridItem({
             className="z-10 flex-1 object-contain w-full h-full border rounded-lg border-foreground/10"
             source={{uri: `file://${wallpaper.path}`}}
           />
-          {/* <View className="z-10 flex-1 w-full h-full border rounded-lg border-foreground/10">
-            <ImageView path={wallpaper.path} />
-          </View> */}
           {applyState === "applied" ? (
             <Button
               variant={"ghost"}
@@ -149,20 +164,51 @@ function WallpaperGridItem({
             </Button>
           )}
         </View>
-        <Text numberOfLines={1} className="mt-2 font-semibold">
-          {wallpaper.title}
-        </Text>
-        <View className="mt-1.5">
-          {wallpaper.width !== null &&
-          wallpaper.height !== null &&
-          !isNaN(wallpaper.width) &&
-          !isNaN(wallpaper.height) ? (
-            <Text className="text-zinc-500">
-              {wallpaper.width} x {wallpaper.height}
+        <View className="flex flex-row items-center">
+          <View className="flex-1">
+            <Text numberOfLines={1} className="mt-2 font-semibold">
+              {wallpaper.title}
             </Text>
-          ) : (
-            <></>
-          )}
+            {wallpaper.width !== null &&
+            wallpaper.height !== null &&
+            !isNaN(wallpaper.width) &&
+            !isNaN(wallpaper.height) ? (
+              <Text className="text-zinc-500 mt-1.5">
+                {wallpaper.width} x {wallpaper.height}
+              </Text>
+            ) : (
+              <></>
+            )}
+          </View>
+          <View className="relative">
+            <Button
+              variant={"ghost"}
+              size={"icon"}
+              onPress={() => {
+                setIsOpen(v => !v);
+              }}>
+              <MoreVertical size={20} color="#bbbbbb" />
+            </Button>
+            <Animated.View style={[animatedStyle]} className="absolute right-1 z-50 bottom-7">
+              <View className="rounded-md shadow-md bg-zinc-900">
+                <Button
+                  variant={"ghost"}
+                  className="justify-start h-12 text-base py-2"
+                  style={{minWidth: 110}}
+                  onPress={() => {}}>
+                  <Trash2 size={16} color="#ffffff" />
+                  <ButtonText numberOfLines={1} className="text-foreground">
+                    Delete
+                  </ButtonText>
+                </Button>
+              </View>
+            </Animated.View>
+            {/* catch outside presses */}
+            <Pressable
+              onPress={() => setIsOpen(false)}
+              className={`${!isOpen && "hidden"} absolute -top-96 -right-96 z-40 w-[200vw] h-[200vh]`}
+            />
+          </View>
         </View>
       </View>
     </View>

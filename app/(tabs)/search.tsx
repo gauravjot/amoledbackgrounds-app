@@ -95,7 +95,7 @@ export default function SearchScreen() {
               pagination: posts?.pagination,
             }),
             severity: "error",
-            stacktrace: error.stack || "",
+            stacktrace: error.stack || error.toString() || "",
           },
           store.deviceIdentifier,
         );

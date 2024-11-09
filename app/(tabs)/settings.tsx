@@ -143,10 +143,7 @@ export default function SettingsScreen() {
 
             <SettingSwitchComponent
               title="Send Error Logs"
-              description={
-                "Send error logs to the developer to help improve the app. No personal information is sent." +
-                (store.logsLastSent ? ` (Last sent:${timeSince(new Date(store.logsLastSent))})` : "")
-              }
+              description={"Send error logs to the developer to help improve the app. No personal information is sent."}
               isEnabled={store.sendErrorLogsEnabled}
               onChange={e => {
                 store.setSendErrorLogsEnabled(e);
@@ -174,7 +171,7 @@ export default function SettingsScreen() {
                 Version {Constants.expoConfig?.version ?? "Unknown"}{" "}
                 {Constants.expoConfig?.extra?.commit && `(${Constants.expoConfig?.extra?.commit.slice(0, 7)})`}
               </Text>
-              <Text className="text-zinc-400">Installation {store.deviceIdentifier}</Text>
+              <Text className="text-zinc-400 text-sm">ID &mdash; {store.deviceIdentifier}</Text>
             </View>
           </View>
         </ScrollView>
