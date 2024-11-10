@@ -1,4 +1,4 @@
-import {FlatList, View} from "react-native";
+import {FlatList, ScrollView, View} from "react-native";
 import {Text} from "@/components/ui/Text";
 import {SafeAreaView} from "react-native-safe-area-context";
 import React from "react";
@@ -166,19 +166,19 @@ export default function HomeScreen() {
           }}
           onEndReachedThreshold={0.5}
           className="z-0 w-full px-3 pt-20"
-          columnWrapperClassName="gap-4"
-          contentContainerClassName="gap-4"
+          columnWrapperClassName="gap-3"
+          contentContainerClassName="gap-3"
           renderItem={({item}) => <OnlineWallpaperGridItem {...item} />}
           ListFooterComponent={() => {
             if (posts && posts.pagination.after === null) {
               return (
-                <View className="flex items-center justify-start w-full mb-20 h-64">
+                <View className="flex items-center justify-start w-full h-64 mb-20">
                   <Text className="px-4 pt-12 text-sm text-zinc-400">End of posts for current filter</Text>
                 </View>
               );
             } else if ((posts?.pagination.page_number ?? 0) > 0) {
               return (
-                <View className="flex flex-row items-center gap-3 justify-center w-full mb-24 h-64">
+                <View className="flex flex-row items-center justify-center w-full h-64 gap-3 mb-24">
                   <LoadingSpinner size={24} color="#676767" />
                   <Animated.View style={fadingPulseAnimation(4500)}>
                     <Text className="text-sm text-zinc-200">Loading more...</Text>

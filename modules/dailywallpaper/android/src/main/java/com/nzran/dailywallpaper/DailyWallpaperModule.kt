@@ -20,7 +20,7 @@ class DailyWallpaperModule : Module() {
     Name("DailyWallpaper")
 
     // Register for the daily wallpaper service
-    Function("registerService") { type: String, sort: String, iconUri: String ->
+    AsyncFunction("registerService") { type: String, sort: String, iconUri: String ->
       val sharedPref = PreferenceManager.getDefaultSharedPreferences(context)
       // Check if service is already enabled
       if (sharedPref.getBoolean("enabled", false)) {
@@ -44,7 +44,7 @@ class DailyWallpaperModule : Module() {
     }
 
     // Unregister for the daily wallpaper service
-    Function("unregisterService") {
+    AsyncFunction("unregisterService") {
       val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
       sharedPreferences.edit().putBoolean("enabled", false).apply()
       // Cancel the worker

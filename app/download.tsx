@@ -135,6 +135,7 @@ export default function DownloadScreen() {
         setDownloadState({status: "complete", progress: null});
         setFileSystemPath(e.path);
         store.addFile({
+          id: wallpaper.id,
           title: wallpaper.title,
           path: e.path,
           width: wallpaper.image.width,
@@ -213,7 +214,7 @@ export default function DownloadScreen() {
             <Button
               variant={"ghost"}
               size={"icon"}
-              className="w-12 h-12 m-2 rounded-lg bg-background/40"
+              className="w-12 h-12 m-2 rounded-lg bg-background/60"
               onPress={() => router.back()}>
               <ArrowLeft size={24} color="white" strokeWidth={1.5} />
             </Button>
@@ -221,7 +222,7 @@ export default function DownloadScreen() {
         </SafeAreaView>
       </View>
       {/* Bottom Info Panel */}
-      <SafeAreaView className="z-20 relative flex-1 flex flex-col">
+      <SafeAreaView className="relative z-20 flex flex-col flex-1">
         <Pressable
           className="absolute top-0 bottom-0 left-0 right-0 z-0"
           onPress={fullScreenWallpaperToggle}></Pressable>

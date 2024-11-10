@@ -3,12 +3,16 @@
 import DailyWallpaperModule from "./src/DailyWallpaperModule";
 
 //
-export function registerDailyWallpaperService(type: "online" | "downloaded", sort: String | null, iconUri: String) {
-  return DailyWallpaperModule.registerService(type, sort, iconUri);
+export async function registerDailyWallpaperService(
+  type: "online" | "downloaded",
+  sort: String | null,
+  iconUri: String,
+) {
+  return await DailyWallpaperModule.registerService(type, sort, iconUri);
 }
 
-export function unregisterDailyWallpaperService() {
-  return DailyWallpaperModule.unregisterService();
+export async function unregisterDailyWallpaperService() {
+  return await DailyWallpaperModule.unregisterService();
 }
 
 export function isDailyWallpaperServiceEnabled() {

@@ -7,7 +7,6 @@ import {Switch} from "@/components/ui/Switch";
 import Constants from "expo-constants";
 import * as WebBrowser from "expo-web-browser";
 import {useSettingsStore} from "@/store/settings";
-import Animated, {FadeInUp} from "react-native-reanimated";
 import Select from "@/components/ui/Select";
 import {SortOptions} from "@/constants/sort_options";
 import {CHANGELOG_URL, PLAY_STORE_URL, PRIVACY_POLICY_URL, SEARCH_HISTORY_LIMIT} from "@/appconfig";
@@ -23,11 +22,12 @@ import {
 import {Asset} from "expo-asset";
 import * as FileSystem from "expo-file-system";
 import {getURIFromSort} from "../../lib/services/get_wallpapers";
-import {timeSince} from "@/lib/utils/time_since";
+import ChangeLogDialog from "@/components/ChangeLog";
 
 export default function SettingsScreen() {
   const store = useSettingsStore();
   const DAILY_WALLPAPER_MODES = ["Online", "Downloaded"];
+  const [showChangeLog, setShowChangeLog] = React.useState(false);
 
   return (
     <SafeAreaView className="flex-1 bg-background">
@@ -59,49 +59,47 @@ export default function SettingsScreen() {
                   if (!icon.localUri) {
                     return;
                   }
-                  // Read file as base64
+                  // Icon for notification
                   const base64Icon = await FileSystem.readAsStringAsync(icon.localUri, {
                     encoding: FileSystem.EncodingType.Base64,
                   });
-                  registerDailyWallpaperService(
+                  await registerDailyWallpaperService(
                     store.dailyWallpaperMode,
                     getURIFromSort(store.dailyWallpaperSort),
                     base64Icon,
                   );
                 } else {
-                  unregisterDailyWallpaperService();
+                  await unregisterDailyWallpaperService();
                 }
               }}
             />
-            {store.isDailyWallpaperEnabled && (
-              <Animated.View entering={FadeInUp} className="z-50 flex flex-row items-center gap-3 px-4 mb-4">
-                <Text className="flex-1 text-zinc-400">Select mode</Text>
-                <View>
+            <View className="z-50 flex flex-row items-center gap-3 px-4 mb-4">
+              <Text className="flex-1 text-zinc-400">Select mode</Text>
+              <View>
+                <Select
+                  defaultValue={store.dailyWallpaperMode === "online" ? "Online" : "Downloaded"}
+                  options={DAILY_WALLPAPER_MODES}
+                  onChange={e => {
+                    store.setDailyWallpaperMode(e.toLowerCase() as any);
+                    changeDailyWallpaperType(e.toLowerCase() === "online" ? "online" : "downloaded");
+                  }}
+                  width={140}
+                />
+              </View>
+              <View>
+                {store.dailyWallpaperMode === "online" && (
                   <Select
-                    defaultValue={store.dailyWallpaperMode === "online" ? "Online" : "Downloaded"}
-                    options={DAILY_WALLPAPER_MODES}
+                    defaultValue={store.dailyWallpaperSort}
+                    options={Object.keys(SortOptions)}
                     onChange={e => {
-                      store.setDailyWallpaperMode(e.toLowerCase() as any);
-                      changeDailyWallpaperType(e.toLowerCase() === "online" ? "online" : "downloaded");
+                      store.setDailyWallpaperSort(SortOptions[e as keyof typeof SortOptions]);
+                      changeDailyWallpaperSort(getURIFromSort(SortOptions[e as keyof typeof SortOptions]));
                     }}
                     width={140}
                   />
-                </View>
-                <View>
-                  {store.dailyWallpaperMode === "online" && (
-                    <Select
-                      defaultValue={store.dailyWallpaperSort}
-                      options={Object.keys(SortOptions)}
-                      onChange={e => {
-                        store.setDailyWallpaperSort(SortOptions[e as keyof typeof SortOptions]);
-                        changeDailyWallpaperSort(getURIFromSort(SortOptions[e as keyof typeof SortOptions]));
-                      }}
-                      width={140}
-                    />
-                  )}
-                </View>
-              </Animated.View>
-            )}
+                )}
+              </View>
+            </View>
 
             <SettingSwitchComponent
               title="Lower Thumbnail Quality"
@@ -152,8 +150,8 @@ export default function SettingsScreen() {
 
             <Pressable
               className="p-4 active:bg-foreground/10"
-              onPress={async () => {
-                await WebBrowser.openBrowserAsync(CHANGELOG_URL);
+              onPress={() => {
+                setShowChangeLog(true);
               }}>
               <Text className="font-bold">Changelog</Text>
             </Pressable>
@@ -171,11 +169,17 @@ export default function SettingsScreen() {
                 Version {Constants.expoConfig?.version ?? "Unknown"}{" "}
                 {Constants.expoConfig?.extra?.commit && `(${Constants.expoConfig?.extra?.commit.slice(0, 7)})`}
               </Text>
-              <Text className="text-zinc-400 text-sm">ID &mdash; {store.deviceIdentifier}</Text>
+              <Text className="text-sm text-zinc-400">ID &mdash; {store.deviceIdentifier}</Text>
             </View>
           </View>
         </ScrollView>
       </View>
+      <ChangeLogDialog
+        isVisible={showChangeLog}
+        onClose={() => {
+          setShowChangeLog(false);
+        }}
+      />
     </SafeAreaView>
   );
 }

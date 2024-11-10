@@ -6,6 +6,9 @@ import {Button, ButtonText} from "@/components/ui/Button";
 import {NavigationHelpers, ParamListBase, TabNavigationState} from "@react-navigation/native";
 import {LinearGradient} from "expo-linear-gradient";
 import {Colors} from "@/constants/colors";
+import ChangeLogDialog from "@/components/ChangeLog";
+import {useSettingsStore} from "@/store/settings";
+import Constants from "expo-constants";
 
 const TABS: {
   [key: string]: {name: string; Icon: LucideIcon; sort: number};
@@ -17,6 +20,9 @@ const TABS: {
 };
 
 export default function TabLayout() {
+  const store = useSettingsStore();
+  const version = Constants.expoConfig?.version ?? "Unknown";
+
   return (
     <View className="flex-1 bg-background">
       <Tabs
@@ -24,6 +30,12 @@ export default function TabLayout() {
         screenOptions={{
           headerShown: false,
         }}></Tabs>
+      <ChangeLogDialog
+        isVisible={store.changelogLastViewed !== version}
+        onClose={() => {
+          store.setChangelogLastViewed(version);
+        }}
+      />
     </View>
   );
 }
@@ -50,8 +62,8 @@ function TabBar({
         options.tabBarLabel !== undefined
           ? options.tabBarLabel
           : options.title !== undefined
-            ? options.title
-            : route.name;
+          ? options.title
+          : route.name;
 
       const isFocused = state.index === index;
 

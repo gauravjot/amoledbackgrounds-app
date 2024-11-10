@@ -46,13 +46,19 @@ const getDownloadedWallpapers = async () => {
     let name = file.name.replace("_amoled_droidheat", "");
     // remove extension
     name = name.split(".").slice(0, -1).join(".");
+    let id = "";
     if (name.includes("_t3_")) {
-      name = name.split("_t3_")[0];
+      const split = name.split("_t3_");
+      name = split[0];
+      id = split[1];
     } else {
-      name = name.split("_-_")[0];
+      const split = name.split("_-_");
+      name = split[0];
+      id = split[split.length - 1];
     }
 
     list.push({
+      id: id,
       title: name.replace(/_/g, " ").replace(/_/g, " ").trim(),
       path: file.path,
       width: parseInt(file.width),
@@ -63,6 +69,7 @@ const getDownloadedWallpapers = async () => {
 };
 
 export type DownloadedWallpaperPostType = {
+  id: string;
   title: string;
   path: string;
   width: number | null;
