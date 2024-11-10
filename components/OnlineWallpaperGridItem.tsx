@@ -1,7 +1,7 @@
 import {View, Image, Pressable} from "react-native";
 import {Text} from "@/components/ui/Text";
 import {WallpaperPostType} from "@/lib/services/wallpaper_type";
-import {ArrowUp, MessageSquareMore} from "lucide-react-native";
+import {ArrowUp, Maximize2, MessageSquareMore} from "lucide-react-native";
 import {timeSince} from "@/lib/utils/time_since";
 import Animated from "react-native-reanimated";
 import {fadingPulseAnimation} from "@/lib/animations/fading_pulse";
@@ -42,11 +42,11 @@ export default function OnlineWallpaperGridItem(wallpaper: WallpaperPostType) {
             <View className="absolute left-0 z-20 flex flex-row items-center gap-2 px-1 bottom-1">
               <View className="flex flex-row items-center justify-center gap-1 p-1 rounded bg-background/80">
                 <ArrowUp size={16} color="white" />
-                <Text className="text-sm text-zinc-200 pe-1">{wallpaper.score}</Text>
+                <Text className="text-sm text-zinc-200 pe-1 font-medium">{wallpaper.score}</Text>
               </View>
               <View className="flex-1"></View>
-              <View className="flex flex-row items-center justify-center px-1.5 py-1 rounded bg-background/80">
-                <Text className="text-sm text-zinc-200">
+              <View className="flex flex-row items-center justify-center p-1 rounded bg-background/80">
+                <Text className="text-sm text-zinc-200 font-medium">
                   {wallpaper.image.width} x {wallpaper.image.height}
                 </Text>
               </View>
@@ -56,10 +56,8 @@ export default function OnlineWallpaperGridItem(wallpaper: WallpaperPostType) {
             {wallpaper.title}
           </Text>
           <View className="flex flex-row gap-1 justify-center items-center mt-1.5">
-            <MessageSquareMore size={16} color="gray" />
-            <Text className="text-sm text-zinc-400">{wallpaper.comments}</Text>
             <Text numberOfLines={1} className="flex-1 text-sm text-zinc-400">
-              &nbsp;&bull;&nbsp; {timeSince(wallpaper.created_utc)}
+              {timeSince(wallpaper.created_utc)} &nbsp;&bull;&nbsp; {wallpaper.author}
             </Text>
           </View>
         </View>

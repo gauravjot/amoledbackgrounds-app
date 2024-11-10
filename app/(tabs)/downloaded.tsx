@@ -4,9 +4,9 @@ import {Text} from "@/components/ui/Text";
 import {SafeAreaView} from "react-native-safe-area-context";
 import {DownloadedWallpaperPostType, useDownloadedWallpapersStore} from "@/store/downloaded_wallpapers";
 import TopBar from "@/components/ui/TopBar";
-import Animated, {useAnimatedStyle, withDelay, withTiming} from "react-native-reanimated";
+import Animated, {useAnimatedStyle, useSharedValue, withDelay, withTiming} from "react-native-reanimated";
 import {Button, ButtonText} from "@/components/ui/Button";
-import {CheckCircle, ImageIcon, MoreVertical, Trash2} from "lucide-react-native";
+import {CheckCircle, ImageIcon, Maximize2, MoreVertical, Trash2} from "lucide-react-native";
 import * as WallpaperManager from "@/modules/wallpaper-manager";
 import {fadingPulseAnimation} from "@/lib/animations/fading_pulse";
 import {onChangeListener} from "../../modules/wallpaper-manager/index";
@@ -26,6 +26,10 @@ export default function DownloadedWallpapersScreen() {
   const [applyState, setApplyState] = React.useState<WallpaperApplyState>({status: "idle", path: ""});
   const flatListRef = React.useRef<FlatList>(null);
   let posts = DownloadedWallpaperStore.files;
+
+  // Animations
+  const topBarAnimateTop = useSharedValue(0);
+  const topBarAnimateOpacity = useSharedValue(1);
 
   // Listeners
   React.useEffect(() => {
@@ -56,7 +60,7 @@ export default function DownloadedWallpapersScreen() {
   return (
     <SafeAreaView className="bg-background">
       <View className="h-screen bg-background">
-        <View className="absolute top-0 z-10 w-full">
+        <Animated.View style={{top: topBarAnimateTop, opacity: topBarAnimateOpacity}} className="absolute z-10 w-full">
           <TopBar showLoader={false} title="Downloads">
             <Select
               options={["Old to New", "New to Old"]}
@@ -67,7 +71,7 @@ export default function DownloadedWallpapersScreen() {
               }}
             />
           </TopBar>
-        </View>
+        </Animated.View>
         <FlatList
           ref={flatListRef}
           numColumns={2}
@@ -76,6 +80,15 @@ export default function DownloadedWallpapersScreen() {
           className="z-0 w-full px-3 pt-20"
           columnWrapperClassName="gap-4"
           contentContainerClassName="gap-4"
+          onScroll={e => {
+            if (e.nativeEvent.contentOffset.y > 96 && e.nativeEvent.velocity && e.nativeEvent.velocity.y > 0) {
+              topBarAnimateTop.value = withTiming(-72, {duration: 200});
+              topBarAnimateOpacity.value = withTiming(0, {duration: 200});
+            } else {
+              topBarAnimateTop.value = withTiming(0, {duration: 200});
+              topBarAnimateOpacity.value = withTiming(1, {duration: 200});
+            }
+          }}
           renderItem={({item}) => (
             <WallpaperGridItem
               wallpaper={item}
@@ -124,6 +137,8 @@ function WallpaperGridItem({
     };
   });
 
+  const deleteWallpaper = async () => {};
+
   return (
     <View className="pb-2" style={{flex: 0.5}}>
       <View className="flex flex-col h-[26rem]">
@@ -141,7 +156,7 @@ function WallpaperGridItem({
               size={"md"}
               className="absolute z-20 px-3 rounded bottom-1 right-1 bg-emerald-700/80"
               disabled>
-              <CheckCircle size={20} color="white" />
+              <CheckCircle size={16} color="white" />
               <ButtonText>Applied</ButtonText>
             </Button>
           ) : applyState === "applying" ? (
@@ -150,7 +165,7 @@ function WallpaperGridItem({
               size={"md"}
               className="absolute z-20 px-3 rounded bottom-1 right-1 bg-background/80"
               disabled>
-              <LoadingSpinner size={20} color="white" />
+              <LoadingSpinner size={16} color="white" />
               <ButtonText>Applying</ButtonText>
             </Button>
           ) : (
@@ -159,7 +174,7 @@ function WallpaperGridItem({
               size={"md"}
               className="absolute z-20 px-3 rounded bottom-1 right-1 bg-background/80"
               onPress={applyWallpaper}>
-              <ImageIcon size={20} color="white" />
+              <ImageIcon size={16} color="white" />
               <ButtonText>Set</ButtonText>
             </Button>
           )}
@@ -173,9 +188,12 @@ function WallpaperGridItem({
             wallpaper.height !== null &&
             !isNaN(wallpaper.width) &&
             !isNaN(wallpaper.height) ? (
-              <Text className="text-zinc-500 mt-1.5">
-                {wallpaper.width} x {wallpaper.height}
-              </Text>
+              <View className="mt-1.5 flex flex-row gap-1.5 items-center">
+                <Maximize2 size={12} color="#71717a" />
+                <Text className="text-zinc-500 text-sm font-medium">
+                  {wallpaper.width} x {wallpaper.height}
+                </Text>
+              </View>
             ) : (
               <></>
             )}
@@ -189,15 +207,16 @@ function WallpaperGridItem({
               }}>
               <MoreVertical size={20} color="#bbbbbb" />
             </Button>
+            {/* dropdown options */}
             <Animated.View style={[animatedStyle]} className="absolute right-1 z-50 bottom-7">
               <View className="rounded-md shadow-md bg-zinc-900">
                 <Button
                   variant={"ghost"}
-                  className="justify-start h-12 text-base py-2"
+                  className="justify-start h-12 text-base py-2 px-4 gap-3"
                   style={{minWidth: 110}}
-                  onPress={() => {}}>
-                  <Trash2 size={16} color="#ffffff" />
-                  <ButtonText numberOfLines={1} className="text-foreground">
+                  onPress={deleteWallpaper}>
+                  <Trash2 size={16} color="#ef4444" />
+                  <ButtonText numberOfLines={1} className="text-red-500">
                     Delete
                   </ButtonText>
                 </Button>

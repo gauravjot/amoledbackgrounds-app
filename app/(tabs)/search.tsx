@@ -198,21 +198,11 @@ export default function SearchScreen() {
               );
             } else if ((posts?.pagination.page_number ?? 0) > 0 && posts?.pagination.after != null) {
               return (
-                <View className="flex flex-col items-center justify-start w-full mb-16 h-72">
+                <View className="flex flex-row items-center gap-3 justify-center w-full mb-24 h-64">
+                  <LoadingSpinner size={24} color="#676767" />
                   <Animated.View style={fadingPulseAnimation(4500)}>
-                    <Text className="pt-12 text-sm text-zinc-200">Loading more...</Text>
+                    <Text className="text-sm text-zinc-200">Loading more...</Text>
                   </Animated.View>
-                  <Button
-                    variant={"secondary"}
-                    size={"sm"}
-                    className="mt-4 opacity-60"
-                    onPress={() => {
-                      if (!wallpaperMutation.isPending) {
-                        wallpaperMutation.mutate(debouncedQuery);
-                      }
-                    }}>
-                    <ButtonText>Not loading?</ButtonText>
-                  </Button>
                 </View>
               );
             }

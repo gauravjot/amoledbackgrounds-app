@@ -8,7 +8,7 @@ import {PaginationType, WallpaperPostType} from "@/lib/services/wallpaper_type";
 import {CircleX} from "lucide-react-native";
 import {Button, ButtonText} from "@/components/ui/Button";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
-import Animated from "react-native-reanimated";
+import Animated, {useSharedValue, withTiming} from "react-native-reanimated";
 import OnlineWallpaperGridItem from "@/components/OnlineWallpaperGridItem";
 import {fadingPulseAnimation} from "@/lib/animations/fading_pulse";
 import {useSettingsStore} from "@/store/settings";
@@ -28,6 +28,10 @@ export default function HomeScreen() {
   const flatListRef = React.useRef<FlatList>(null);
   const [posts, setPosts] = React.useState<PostsType>();
   const [sort, setSort] = React.useState<SortOptions>(store.rememberSortPreferences ? store.homeSort : SortOptions.Hot);
+
+  // Animations
+  const topBarAnimateTop = useSharedValue(0);
+  const topBarAnimateOpacity = useSharedValue(1);
 
   // Lock to prevent multiple fetches
   const [isMutationLock, setIsMutationLock] = React.useState(false);
@@ -104,7 +108,7 @@ export default function HomeScreen() {
   return (
     <SafeAreaView className="bg-background">
       <View className="h-screen bg-background">
-        <View className="absolute top-0 z-10 w-full">
+        <Animated.View style={{top: topBarAnimateTop, opacity: topBarAnimateOpacity}} className="absolute z-10 w-full">
           <TopBar showLoader={posts !== null && wallpaperMutation.isPending} title="Amoled Backgrounds">
             <Select
               defaultValue={sort}
@@ -115,7 +119,7 @@ export default function HomeScreen() {
               width={140}
             />
           </TopBar>
-        </View>
+        </Animated.View>
         {wallpaperMutation.isError && wallpaperMutation.error.message?.includes("SafeError") && (
           <View className="absolute top-0 right-0 z-50 flex justify-center w-full h-screen bg-background/70">
             <View className="flex flex-row items-center gap-3 px-4">
@@ -151,6 +155,15 @@ export default function HomeScreen() {
               wallpaperMutation.mutate();
             }
           }}
+          onScroll={e => {
+            if (e.nativeEvent.contentOffset.y > 96 && e.nativeEvent.velocity && e.nativeEvent.velocity.y > 0) {
+              topBarAnimateTop.value = withTiming(-72, {duration: 200});
+              topBarAnimateOpacity.value = withTiming(0, {duration: 200});
+            } else {
+              topBarAnimateTop.value = withTiming(0, {duration: 200});
+              topBarAnimateOpacity.value = withTiming(1, {duration: 200});
+            }
+          }}
           onEndReachedThreshold={0.5}
           className="z-0 w-full px-3 pt-20"
           columnWrapperClassName="gap-4"
@@ -159,27 +172,17 @@ export default function HomeScreen() {
           ListFooterComponent={() => {
             if (posts && posts.pagination.after === null) {
               return (
-                <View className="flex items-center justify-start w-full mb-16 h-72">
+                <View className="flex items-center justify-start w-full mb-20 h-64">
                   <Text className="px-4 pt-12 text-sm text-zinc-400">End of posts for current filter</Text>
                 </View>
               );
             } else if ((posts?.pagination.page_number ?? 0) > 0) {
               return (
-                <View className="flex flex-col items-center justify-start w-full mb-16 h-72">
+                <View className="flex flex-row items-center gap-3 justify-center w-full mb-24 h-64">
+                  <LoadingSpinner size={24} color="#676767" />
                   <Animated.View style={fadingPulseAnimation(4500)}>
-                    <Text className="pt-12 text-sm text-zinc-200">Loading more...</Text>
+                    <Text className="text-sm text-zinc-200">Loading more...</Text>
                   </Animated.View>
-                  <Button
-                    variant={"secondary"}
-                    size={"sm"}
-                    className="mt-4 opacity-60"
-                    onPress={() => {
-                      if (!wallpaperMutation.isPending) {
-                        wallpaperMutation.mutate();
-                      }
-                    }}>
-                    <ButtonText>Not loading?</ButtonText>
-                  </Button>
                 </View>
               );
             }
