@@ -16,7 +16,6 @@ import {
 } from "lucide-react-native";
 import {Button, ButtonText} from "@/components/ui/Button";
 import * as WebBrowser from "expo-web-browser";
-import * as FileSystem from "expo-file-system";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import {useDownloadedWallpapersStore} from "@/store/downloaded_wallpapers";
 import {setWallpaper, onChangeListener} from "@/modules/wallpaper-manager";
@@ -45,6 +44,7 @@ export default function DownloadScreen() {
   const filename = `${wallpaper.title
     .replace(/[\/\\#,+()|~%'":*?<>{}]/g, "") // Remove special characters
     .replace(/\s\s+/g, " ") // Remove extra spaces
+    .trim()
     .replaceAll(" ", "_")}_-_${wallpaper.id}_amoled_droidheat`;
   const file_extension = wallpaper.image.url.split(".").pop() || ".png";
 
@@ -62,21 +62,20 @@ export default function DownloadScreen() {
     const saved_file = store.getFile(filename);
     if (saved_file) {
       // Check if file exists in file system
-      FileSystem.getInfoAsync(saved_file.path)
-        .then(() => {
-          setDownloadState({status: "complete", progress: null});
-          setFileSystemPath(saved_file.path);
+      DownloadManager.checkFileExists(saved_file.path)
+        .then(e => {
+          if (e) {
+            setDownloadState({status: "complete", progress: null});
+            setFileSystemPath(saved_file.path);
+          } else {
+            store.removeFile(filename);
+          }
         })
         .catch(() => {
           store.removeFile(filename);
         });
     }
   }, []);
-
-  // Toggle to show comments dialog
-  function showComments() {
-    console.log("Show Comments");
-  }
 
   // Toggle to hide/show the bottom info panel
   function fullScreenWallpaperToggle() {

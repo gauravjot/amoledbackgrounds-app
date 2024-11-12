@@ -59,7 +59,7 @@ class BackgroundWorker(context: Context, workerParams: WorkerParameters) :
             } else if (wallpaper is String && wallpaper.isNotEmpty()) {
                 // if wallpaper is a String, then it is path to the wallpaper
                 // set wallpaper
-                Log.d(TAG, "Setting wallpaper")
+                Log.d(TAG, "Setting wallpaper $wallpaper")
                 Utils.setWallpaper(applicationContext, wallpaper)
             } else {
                 Log.d(TAG, "Failed to get wallpaper")

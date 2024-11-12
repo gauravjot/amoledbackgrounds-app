@@ -61,8 +61,8 @@ const getDownloadedWallpapers = async () => {
       id: id,
       title: name.replace(/_/g, " ").replace(/_/g, " ").trim(),
       path: file.path,
-      width: parseInt(file.width),
-      height: parseInt(file.height),
+      width: file.width.length > 0 ? parseInt(file.width) : null,
+      height: file.height.length > 0 ? parseInt(file.height) : null,
     });
   }
   return list;

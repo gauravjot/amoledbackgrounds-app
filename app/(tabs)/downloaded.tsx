@@ -93,6 +93,17 @@ export default function DownloadedWallpapersScreen() {
               topBarAnimateOpacity.value = withTiming(1, {duration: 200});
             }
           }}
+          ListHeaderComponent={() =>
+            DownloadedWallpaperStore.files.length > 0 ? (
+              <View className="flex items-center w-full pb-2 border-b border-zinc-900">
+                <Text className="text-sm text-zinc-500">
+                  Total of {DownloadedWallpaperStore.files.length} downloaded wallpapers
+                </Text>
+              </View>
+            ) : (
+              <></>
+            )
+          }
           renderItem={({item}) => (
             <WallpaperGridItem
               wallpaper={item}

@@ -30,6 +30,10 @@ export function getDownloadedFiles(
   return DownloadManagerModule.getDownloadedFiles(matchNameStr);
 }
 
+export async function checkFileExists(path: string): Promise<boolean> {
+  return DownloadManagerModule.checkFileExists(path);
+}
+
 /*
  * Permissions for storage access on Android.
  */

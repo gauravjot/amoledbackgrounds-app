@@ -11,7 +11,11 @@ import Select from "@/components/ui/Select";
 import {SortOptions} from "@/constants/sort_options";
 import {PLAY_STORE_URL, PRIVACY_POLICY_URL, SEARCH_HISTORY_LIMIT} from "@/appconfig";
 import PlayStoreIcon from "@/assets/icons/play_store.svg";
-import {hasPermissionForStorage, openAppInDeviceSettings} from "@/modules/download-manager";
+import {
+  hasPermissionForStorage,
+  openAppInDeviceSettings,
+  requestStoragePermissionsAsync,
+} from "@/modules/download-manager";
 import {Button} from "@/components/ui/Button";
 import {
   changeDailyWallpaperSort,
@@ -88,7 +92,16 @@ export default function SettingsScreen() {
                 <Select
                   defaultValue={store.dailyWallpaperMode === "online" ? "Online" : "Downloaded"}
                   options={DAILY_WALLPAPER_MODES}
-                  onChange={e => {
+                  onChange={async e => {
+                    if (e === "downloadeded") {
+                      if (!hasPermissionForStorage()) {
+                        await requestStoragePermissionsAsync();
+                      }
+                      if (!hasPermissionForStorage()) {
+                        ToastAndroid.showWithGravity("Permission denied", ToastAndroid.SHORT, ToastAndroid.CENTER);
+                        return;
+                      }
+                    }
                     store.setDailyWallpaperMode(e.toLowerCase() as any);
                     changeDailyWallpaperType(e.toLowerCase() === "online" ? "online" : "downloaded");
                   }}
