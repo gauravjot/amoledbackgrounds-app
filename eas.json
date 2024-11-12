@@ -10,7 +10,12 @@
     "preview": {
       "distribution": "internal"
     },
-    "production": {}
+    "production": {
+      "env": {
+        "EXPO_PUBLIC_BUILD_NAME": "PRODUCTION",
+        "EXPO_PUBLIC_LOGS_SERVER": "https://bigsur.nzran.com"
+      }
+    }
   },
   "submit": {
     "production": {}
