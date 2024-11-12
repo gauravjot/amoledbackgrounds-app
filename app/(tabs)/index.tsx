@@ -1,4 +1,4 @@
-import {FlatList, ScrollView, View} from "react-native";
+import {FlatList, View} from "react-native";
 import {Text} from "@/components/ui/Text";
 import {SafeAreaView} from "react-native-safe-area-context";
 import React from "react";
@@ -72,7 +72,7 @@ export default function HomeScreen() {
       if (!error.toString().toLowerCase().includes("safeerror")) {
         SqlUtility.insertErrorLog(
           {
-            file: "(tabs)/index.tsx[HomeScreen.tsx]",
+            file: "(tabs)/index.tsx[HomeScreen]",
             description: error.message,
             error_title: "Wallpaper Fetch Error",
             method: "wallpaperMutation",

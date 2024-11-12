@@ -4,7 +4,7 @@ import {WallpaperPostType} from "@/lib/services/wallpaper_type";
 import {useLocalSearchParams} from "expo-router";
 import {Text} from "@/components/ui/Text";
 import {SafeAreaView} from "react-native-safe-area-context";
-import Animated, {useSharedValue, withTiming, withDelay} from "react-native-reanimated";
+import Animated, {useSharedValue, withTiming} from "react-native-reanimated";
 import {
   ArrowDownCircle,
   ArrowLeft,
@@ -13,7 +13,6 @@ import {
   ExternalLink,
   ImageIcon,
   Maximize2,
-  MessageSquareMore,
 } from "lucide-react-native";
 import {Button, ButtonText} from "@/components/ui/Button";
 import * as WebBrowser from "expo-web-browser";

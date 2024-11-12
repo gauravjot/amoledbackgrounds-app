@@ -6,12 +6,11 @@ import DailyWallpaperModule from "./src/DailyWallpaperModule";
 export async function registerDailyWallpaperService(
   type: "online" | "downloaded",
   sort: String | null,
-  iconUri: String,
-) {
-  return await DailyWallpaperModule.registerService(type, sort, iconUri);
+): Promise<string> {
+  return await DailyWallpaperModule.registerService(type, sort);
 }
 
-export async function unregisterDailyWallpaperService() {
+export async function unregisterDailyWallpaperService(): Promise<boolean> {
   return await DailyWallpaperModule.unregisterService();
 }
 

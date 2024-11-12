@@ -1,4 +1,4 @@
-import {Pressable, ScrollView, View} from "react-native";
+import {Pressable, ScrollView, ToastAndroid, View} from "react-native";
 import React from "react";
 import {Text} from "@/components/ui/Text";
 import {SafeAreaView} from "react-native-safe-area-context";
@@ -9,7 +9,7 @@ import * as WebBrowser from "expo-web-browser";
 import {useSettingsStore} from "@/store/settings";
 import Select from "@/components/ui/Select";
 import {SortOptions} from "@/constants/sort_options";
-import {CHANGELOG_URL, PLAY_STORE_URL, PRIVACY_POLICY_URL, SEARCH_HISTORY_LIMIT} from "@/appconfig";
+import {PLAY_STORE_URL, PRIVACY_POLICY_URL, SEARCH_HISTORY_LIMIT} from "@/appconfig";
 import PlayStoreIcon from "@/assets/icons/play_store.svg";
 import {hasPermissionForStorage, openAppInDeviceSettings} from "@/modules/download-manager";
 import {Button} from "@/components/ui/Button";
@@ -19,10 +19,9 @@ import {
   registerDailyWallpaperService,
   unregisterDailyWallpaperService,
 } from "@/modules/dailywallpaper";
-import {Asset} from "expo-asset";
-import * as FileSystem from "expo-file-system";
 import {getURIFromSort} from "../../lib/services/get_wallpapers";
 import ChangeLogDialog from "@/components/ChangeLog";
+import * as SqlUtility from "@/lib/utils/sql";
 
 export default function SettingsScreen() {
   const store = useSettingsStore();
@@ -54,22 +53,32 @@ export default function SettingsScreen() {
               onChange={async e => {
                 store.setDailyWallpaperEnabled(e);
                 if (e) {
-                  const icon = Asset.fromModule(require("../../assets/images/icon.png"));
-                  await icon.downloadAsync();
-                  if (!icon.localUri) {
-                    return;
+                  try {
+                    const result = await registerDailyWallpaperService(
+                      store.dailyWallpaperMode,
+                      getURIFromSort(store.dailyWallpaperSort),
+                    );
+                    ToastAndroid.showWithGravity(result, ToastAndroid.SHORT, ToastAndroid.CENTER);
+                  } catch (err) {
+                    SqlUtility.insertErrorLog(
+                      {
+                        file: "(tabs)/settings.tsx[SettingsScreen]",
+                        description: "Failed to enable daily wallpaper",
+                        error_title: "Daily Wallpaper Error",
+                        method: "JSX SettingSwitchComponent",
+                        params: JSON.stringify({}),
+                        severity: "error",
+                        stacktrace: typeof err === "string" ? err : "",
+                      },
+                      store.deviceIdentifier,
+                    );
+                    console.error(err);
+                    ToastAndroid.showWithGravity("Failed to enable", ToastAndroid.SHORT, ToastAndroid.CENTER);
+                    store.setDailyWallpaperEnabled(false);
                   }
-                  // Icon for notification
-                  const base64Icon = await FileSystem.readAsStringAsync(icon.localUri, {
-                    encoding: FileSystem.EncodingType.Base64,
-                  });
-                  await registerDailyWallpaperService(
-                    store.dailyWallpaperMode,
-                    getURIFromSort(store.dailyWallpaperSort),
-                    base64Icon,
-                  );
                 } else {
                   await unregisterDailyWallpaperService();
+                  ToastAndroid.showWithGravity("Disabled", ToastAndroid.SHORT, ToastAndroid.CENTER);
                 }
               }}
             />
@@ -168,6 +177,7 @@ export default function SettingsScreen() {
               <Text className="text-zinc-400">
                 Version {Constants.expoConfig?.version ?? "Unknown"}{" "}
                 {Constants.expoConfig?.extra?.commit && `(${Constants.expoConfig?.extra?.commit.slice(0, 7)})`}
+                {` ${process.env.EXPO_PUBLIC_BUILD_NAME ?? "BUILD_UNKNOWN"}`}
               </Text>
               <Text className="text-sm text-zinc-400">ID &mdash; {store.deviceIdentifier}</Text>
             </View>

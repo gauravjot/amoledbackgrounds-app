@@ -24,8 +24,8 @@ class BackgroundWorker(context: Context, workerParams: WorkerParameters) :
     @SuppressLint("UnspecifiedRegisterReceiverFlag")
     override suspend fun doWork(): Result {
         return withContext(Dispatchers.IO) {
-            val sharedPrefs = PreferenceManager.getDefaultSharedPreferences(applicationContext)
             Log.d(TAG, "Scheduled worker started")
+            val sharedPrefs = PreferenceManager.getDefaultSharedPreferences(applicationContext)
             if (!sharedPrefs.getBoolean("enabled", false)) {
                 Log.d(TAG, "Daily wallpaper is not enabled. Worker is exiting.")
                 return@withContext Result.success()

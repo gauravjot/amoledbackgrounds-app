@@ -4,17 +4,7 @@ import {Text} from "@/components/ui/Text";
 import {SafeAreaView} from "react-native-safe-area-context";
 import {DownloadedWallpaperPostType, useDownloadedWallpapersStore} from "@/store/downloaded_wallpapers";
 import TopBar from "@/components/ui/TopBar";
-import Animated, {
-  FadeIn,
-  FadeInDown,
-  FadeInUp,
-  FadeOutDown,
-  FadeOutUp,
-  useAnimatedStyle,
-  useSharedValue,
-  withDelay,
-  withTiming,
-} from "react-native-reanimated";
+import Animated, {FadeIn, FadeInDown, FadeOutDown, useSharedValue, withTiming} from "react-native-reanimated";
 import {Button, ButtonText} from "@/components/ui/Button";
 import {CheckCircle, ExternalLink, ImageIcon, Maximize2, MoreVertical, Trash2} from "lucide-react-native";
 import * as WallpaperManager from "@/modules/wallpaper-manager";
