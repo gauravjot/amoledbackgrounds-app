@@ -1,6 +1,13 @@
 import React from "react";
 import {Pressable, View} from "react-native";
-import Animated, {useAnimatedStyle, withDelay, withTiming} from "react-native-reanimated";
+import Animated, {
+  FadeInUp,
+  FadeOutDown,
+  FadeOutUp,
+  useAnimatedStyle,
+  withDelay,
+  withTiming,
+} from "react-native-reanimated";
 import {Button, ButtonText} from "./Button";
 import {ChevronDown} from "lucide-react-native";
 
@@ -29,22 +36,6 @@ export default function Select({
   const [isOpen, setIsOpen] = React.useState(false);
   const [selected, setSelected] = React.useState<string>(defaultValue);
 
-  const animatedStyle = useAnimatedStyle(() => {
-    return {
-      marginTop: withTiming(isOpen ? 10 : 0, {
-        duration: 250,
-      }),
-      opacity: withDelay(
-        50,
-        withTiming(isOpen ? 1 : 0, {
-          duration: 150,
-        }),
-      ),
-      display: isOpen ? "flex" : "none",
-      width: Math.max(width, 120),
-    };
-  });
-
   return (
     <View className="relative">
       <Button
@@ -53,30 +44,33 @@ export default function Select({
         size="md"
         onPress={() => setIsOpen(v => !v)}>
         <ButtonText>{selected}</ButtonText>
-        <ChevronDown size={20} color="white" />
+        <ChevronDown size={20} color="white" className={isOpen ? "rotate-180" : ""} />
       </Button>
-      <Animated.View
-        style={[animatedStyle]}
-        className={`absolute ${align && align === "right" ? "left-0" : "right-0"} z-50 top-8`}>
-        <View className="rounded-md shadow-md bg-zinc-900">
-          {options.map(o => (
-            <Button
-              key={o}
-              variant={"ghost"}
-              className={`justify-start h-12 text-base ${o === selected ? "bg-accent" : ""}`}
-              style={{minWidth: 110}}
-              onPress={() => {
-                setIsOpen(false);
-                onChange(o);
-                setSelected(o);
-              }}>
-              <ButtonText numberOfLines={1} className={o === selected ? "text-foreground" : "text-foreground/70"}>
-                {o}
-              </ButtonText>
-            </Button>
-          ))}
-        </View>
-      </Animated.View>
+      {isOpen && (
+        <Animated.View
+          entering={FadeInUp}
+          exiting={FadeOutUp.duration(150)}
+          className={`absolute ${align && align === "right" ? "left-0" : "right-0"} z-50 top-12`}>
+          <View className="rounded-md shadow-md bg-zinc-900" style={{width: width}}>
+            {options.map(o => (
+              <Button
+                key={o}
+                variant={"ghost"}
+                className={`justify-start h-12 text-base ${o === selected ? "bg-accent" : ""}`}
+                style={{minWidth: 110}}
+                onPress={() => {
+                  setIsOpen(false);
+                  onChange(o);
+                  setSelected(o);
+                }}>
+                <ButtonText numberOfLines={1} className={o === selected ? "text-foreground" : "text-foreground/70"}>
+                  {o}
+                </ButtonText>
+              </Button>
+            ))}
+          </View>
+        </Animated.View>
+      )}
       {/* catch outside presses */}
       <Pressable
         onPress={() => setIsOpen(false)}

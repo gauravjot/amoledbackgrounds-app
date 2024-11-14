@@ -4,9 +4,9 @@ import {Text} from "@/components/ui/Text";
 import {SafeAreaView} from "react-native-safe-area-context";
 import {DownloadedWallpaperPostType, useDownloadedWallpapersStore} from "@/store/downloaded_wallpapers";
 import TopBar from "@/components/ui/TopBar";
-import Animated, {useAnimatedStyle, useSharedValue, withDelay, withTiming} from "react-native-reanimated";
+import Animated, {FadeIn, FadeInDown, FadeOutDown, useSharedValue, withTiming} from "react-native-reanimated";
 import {Button, ButtonText} from "@/components/ui/Button";
-import {CheckCircle, ImageIcon, Maximize2, MoreVertical, Trash2} from "lucide-react-native";
+import {CheckCircle, ExternalLink, ImageIcon, Maximize2, MoreVertical, Trash2} from "lucide-react-native";
 import * as WallpaperManager from "@/modules/wallpaper-manager";
 import {fadingPulseAnimation} from "@/lib/animations/fading_pulse";
 import {onChangeListener} from "../../modules/wallpaper-manager/index";
@@ -14,6 +14,7 @@ import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import Select from "@/components/ui/Select";
 import {useSettingsStore} from "@/store/settings";
 import {hasPermissionForStorage, requestStoragePermissionsAsync} from "@/modules/download-manager";
+import * as WebBrowser from "expo-web-browser";
 
 type WallpaperApplyState = {
   status: "idle" | "applying" | "applied" | "error";
@@ -25,7 +26,6 @@ export default function DownloadedWallpapersScreen() {
   const DownloadedWallpaperStore = useDownloadedWallpapersStore();
   const [applyState, setApplyState] = React.useState<WallpaperApplyState>({status: "idle", path: ""});
   const flatListRef = React.useRef<FlatList>(null);
-  let posts = DownloadedWallpaperStore.files;
 
   // Animations
   const topBarAnimateTop = useSharedValue(0);
@@ -38,7 +38,6 @@ export default function DownloadedWallpapersScreen() {
       if (!hasPermissionForStorage()) {
         await requestStoragePermissionsAsync();
         await DownloadedWallpaperStore.initialize();
-        posts = DownloadedWallpaperStore.files;
       }
     };
     runPermissions();
@@ -69,6 +68,7 @@ export default function DownloadedWallpapersScreen() {
                 store.setDownloadedScreenSort(value as any);
                 if (flatListRef.current) flatListRef.current.scrollToOffset({offset: 0});
               }}
+              width={130}
             />
           </TopBar>
         </Animated.View>
@@ -76,10 +76,14 @@ export default function DownloadedWallpapersScreen() {
           ref={flatListRef}
           numColumns={2}
           keyExtractor={item => item.path}
-          data={store.downloadedScreenSort === "Old to New" ? posts : posts.slice().reverse()}
+          data={
+            store.downloadedScreenSort === "Old to New"
+              ? DownloadedWallpaperStore.files
+              : DownloadedWallpaperStore.files.slice().reverse()
+          }
           className="z-0 w-full px-3 pt-20"
-          columnWrapperClassName="gap-4"
-          contentContainerClassName="gap-4"
+          columnWrapperClassName="gap-3"
+          contentContainerClassName="gap-3"
           onScroll={e => {
             if (e.nativeEvent.contentOffset.y > 96 && e.nativeEvent.velocity && e.nativeEvent.velocity.y > 0) {
               topBarAnimateTop.value = withTiming(-72, {duration: 200});
@@ -89,6 +93,17 @@ export default function DownloadedWallpapersScreen() {
               topBarAnimateOpacity.value = withTiming(1, {duration: 200});
             }
           }}
+          ListHeaderComponent={() =>
+            DownloadedWallpaperStore.files.length > 0 ? (
+              <View className="flex items-center w-full pb-2 border-b border-zinc-900">
+                <Text className="text-sm text-zinc-500">
+                  Total of {DownloadedWallpaperStore.files.length} downloaded wallpapers
+                </Text>
+              </View>
+            ) : (
+              <></>
+            )
+          }
           renderItem={({item}) => (
             <WallpaperGridItem
               wallpaper={item}
@@ -121,26 +136,10 @@ function WallpaperGridItem({
 }) {
   const [isOpen, setIsOpen] = React.useState(false);
 
-  const animatedStyle = useAnimatedStyle(() => {
-    return {
-      marginBottom: withTiming(isOpen ? 10 : 0, {
-        duration: 200,
-      }),
-      opacity: withDelay(
-        50,
-        withTiming(isOpen ? 1 : 0, {
-          duration: 100,
-        }),
-      ),
-      display: isOpen ? "flex" : "none",
-      width: 120,
-    };
-  });
-
   const deleteWallpaper = async () => {};
 
   return (
-    <View className="pb-2" style={{flex: 0.5}}>
+    <Animated.View entering={FadeIn} className="pb-2" style={{flex: 0.5}}>
       <View className="flex flex-col h-[26rem]">
         <View className="relative flex-1 web:block">
           <Animated.View
@@ -190,7 +189,7 @@ function WallpaperGridItem({
             !isNaN(wallpaper.height) ? (
               <View className="mt-1.5 flex flex-row gap-1.5 items-center">
                 <Maximize2 size={12} color="#71717a" />
-                <Text className="text-zinc-500 text-sm font-medium">
+                <Text className="text-sm font-medium text-zinc-500">
                   {wallpaper.width} x {wallpaper.height}
                 </Text>
               </View>
@@ -208,20 +207,32 @@ function WallpaperGridItem({
               <MoreVertical size={20} color="#bbbbbb" />
             </Button>
             {/* dropdown options */}
-            <Animated.View style={[animatedStyle]} className="absolute right-1 z-50 bottom-7">
-              <View className="rounded-md shadow-md bg-zinc-900">
-                <Button
-                  variant={"ghost"}
-                  className="justify-start h-12 text-base py-2 px-4 gap-3"
-                  style={{minWidth: 110}}
-                  onPress={deleteWallpaper}>
-                  <Trash2 size={16} color="#ef4444" />
-                  <ButtonText numberOfLines={1} className="text-red-500">
-                    Delete
-                  </ButtonText>
-                </Button>
-              </View>
-            </Animated.View>
+            {isOpen && (
+              <Animated.View entering={FadeInDown} exiting={FadeOutDown} className="absolute z-50 right-1 bottom-12">
+                <View className="rounded-md shadow-md bg-zinc-900" style={{width: 160}}>
+                  <Button
+                    variant={"ghost"}
+                    className="justify-start h-12 gap-3 px-4 py-2 text-base"
+                    onPress={async () => {
+                      await WebBrowser.openBrowserAsync(
+                        "https://www.reddit.com/r/Amoledbackgrounds/comments/" + wallpaper.id,
+                      );
+                    }}>
+                    <ExternalLink size={16} color="#ffffff" />
+                    <ButtonText>See on Reddit</ButtonText>
+                  </Button>
+                  <Button
+                    variant={"ghost"}
+                    className="justify-start h-12 gap-3 px-4 py-2 text-base"
+                    onPress={deleteWallpaper}>
+                    <Trash2 size={16} color="#f87171" />
+                    <ButtonText numberOfLines={1} className="text-red-400">
+                      Delete
+                    </ButtonText>
+                  </Button>
+                </View>
+              </Animated.View>
+            )}
             {/* catch outside presses */}
             <Pressable
               onPress={() => setIsOpen(false)}
@@ -230,6 +241,6 @@ function WallpaperGridItem({
           </View>
         </View>
       </View>
-    </View>
+    </Animated.View>
   );
 }

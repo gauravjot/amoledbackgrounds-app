@@ -25,21 +25,22 @@ import java.util.concurrent.Executors
 import android.os.Handler
 import android.os.Looper
 import android.os.Message
+import androidx.core.database.getStringOrNull
 import expo.modules.kotlin.exception.Exceptions
 
 import java.io.File
 import java.nio.file.Files
 import java.util.ArrayList
 import java.util.HashMap
-import java.util.concurrent.ExecutorService
 
 class DownloadManagerModule : Module() {
 
   private val context
   get() = requireNotNull(appContext.reactContext)
 
-  private val executor: ExecutorService = Executors.newSingleThreadExecutor()
-  private val downloadPath: String = "/storage/emulated/0/Pictures/"
+  private val DOWNLOAD_LOCATION = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
+
+  private val executor = Executors.newSingleThreadExecutor()
   var isDownloadComplete = false
 
   private val downloadProgressHandler = Handler(Looper.getMainLooper()) { msg ->
@@ -73,11 +74,9 @@ class DownloadManagerModule : Module() {
       val result = ArrayList<HashMap<String, String>>()
       val contentResolver: ContentResolver = context.contentResolver
       val projection = arrayOf(
-        MediaStore.Images.Media._ID,
         MediaStore.Images.Media.DISPLAY_NAME,
         MediaStore.Images.Media.HEIGHT,
-        MediaStore.Images.Media.WIDTH,
-        MediaStore.Images.Media.RELATIVE_PATH
+        MediaStore.Images.Media.WIDTH
       )
       val selection = ""
       val selectionArgs = arrayOf<String>()
@@ -97,12 +96,11 @@ class DownloadManagerModule : Module() {
             if (matchNameStr.isNotEmpty() && !name.contains(matchNameStr)) {
               continue
             }
-            val path = cursor.getString(cursor.getColumnIndex(MediaStore.Images.Media.RELATIVE_PATH))
             val fileMap = HashMap<String, String>()
             fileMap["name"] = name
-            fileMap["path"] = "/storage/emulated/0/$path$name"
-            fileMap["width"] = cursor.getString(cursor.getColumnIndex(MediaStore.Images.Media.WIDTH))
-            fileMap["height"] = cursor.getString(cursor.getColumnIndex(MediaStore.Images.Media.HEIGHT))
+            fileMap["path"] = DOWNLOAD_LOCATION.resolve(name).absolutePath
+            fileMap["width"] = cursor.getStringOrNull(cursor.getColumnIndex(MediaStore.Images.Media.WIDTH)) ?: ""
+            fileMap["height"] = cursor.getStringOrNull(cursor.getColumnIndex(MediaStore.Images.Media.HEIGHT)) ?: ""
             result.add(fileMap)
           }
           cursor.close()
@@ -138,6 +136,12 @@ class DownloadManagerModule : Module() {
       intent.data = Uri.fromParts("package", context.packageName, null)
       intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
       context.startActivity(intent)
+    }
+
+    // Check if file exists
+    AsyncFunction("checkFileExists") { path: String ->
+      val file = File(path)
+      return@AsyncFunction file.exists()
     }
 
     // Enables the module to be used as a native view. Definition components that are accepted as part of
@@ -248,13 +252,13 @@ class DownloadManagerModule : Module() {
   // Send event to JavaScript after processing downloaded file
   fun sendDownloadedFileInfo() {
     try {
-      var file = File("$downloadPath$filename.download")
+      var file = File(DOWNLOAD_LOCATION,"$filename.download")
       if (!file.exists()) {
         throw Exception("Downloaded file not found")
       }
       // rename file to remove .download extension
       Files.move(file.toPath(), file.toPath().resolveSibling("$filename.$fileExtension"))
-      file = File("$downloadPath$filename.$fileExtension")
+      file = File(DOWNLOAD_LOCATION, "$filename.$fileExtension")
       // Remove from MediaStore
       val contentResolver: ContentResolver = context.contentResolver
       val contentUri: Uri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI

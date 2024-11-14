@@ -20,7 +20,7 @@ class DailyWallpaperModule : Module() {
     Name("DailyWallpaper")
 
     // Register for the daily wallpaper service
-    Function("registerService") { type: String, sort: String, iconUri: String ->
+    AsyncFunction("registerService") { type: String, sort: String ->
       val sharedPref = PreferenceManager.getDefaultSharedPreferences(context)
       // Check if service is already enabled
       if (sharedPref.getBoolean("enabled", false)) {
@@ -30,9 +30,9 @@ class DailyWallpaperModule : Module() {
       // Save in shared preferences
       sharedPrefEditor.putString("type", type)
       sharedPrefEditor.putString("sort", sort)
-      sharedPrefEditor.putString("iconUri", iconUri)
       sharedPrefEditor.putBoolean("enabled", true)
       sharedPrefEditor.putLong("timestamp", Date().time)
+      sharedPrefEditor.apply()
 
       // Schedule the worker
       val workManager = WorkManager.getInstance(context)
@@ -40,11 +40,12 @@ class DailyWallpaperModule : Module() {
         .addTag("dailyWallpaper")
         .build()
       workManager.enqueueUniquePeriodicWork("dailyWallpaper", ExistingPeriodicWorkPolicy.REPLACE, workRequest)
-      sharedPrefEditor.apply()
+
+      return@AsyncFunction workRequest.id.toString()
     }
 
     // Unregister for the daily wallpaper service
-    Function("unregisterService") {
+    AsyncFunction("unregisterService") {
       val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
       sharedPreferences.edit().putBoolean("enabled", false).apply()
       // Cancel the worker
@@ -52,6 +53,7 @@ class DailyWallpaperModule : Module() {
       workManager.cancelAllWorkByTag("dailyWallpaper")
       workManager.cancelUniqueWork("dailyWallpaper")
       Log.d(TAG, "Worker cancelled")
+      return@AsyncFunction true
     }
 
     // Check if the daily wallpaper service is enabled

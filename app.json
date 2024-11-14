@@ -2,9 +2,9 @@
   "expo": {
     "name": "AmoledBackgrounds",
     "slug": "amoledbackgrounds-app",
-    "version": "2.0.0-rc3",
+    "version": "2.0.0-rc4",
     "android": {
-      "versionCode": 31,
+      "versionCode": 32,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#000000"
@@ -19,7 +19,8 @@
         "android.permission.RECEIVE_BOOT_COMPLETED",
         "android.permission.SEND_DOWNLOAD_COMPLETED_INTENTS"
       ],
-      "package": "com.droidheat.amoledbackgrounds"
+      "package": "com.droidheat.amoledbackgrounds",
+      "userInterfaceStyle": "dark"
     },
     "plugins": [
       "expo-router",
@@ -42,7 +43,8 @@
         {
           "assets": ["assets/images/icon.png"]
         }
-      ]
+      ],
+      ["./apptheme.js", {}]
     ],
     "web": {
       "bundler": "metro",

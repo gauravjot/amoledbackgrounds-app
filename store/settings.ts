@@ -40,6 +40,10 @@ export interface SettingsStore {
   setPrivacyPolicyAccepted: (accepted: boolean) => void;
   PrivacyPolicyAcceptedVersion: string | null;
   setPrivacyPolicyAcceptedVersion: (version: string | null) => void;
+
+  // Changelog
+  changelogLastViewed: string | null;
+  setChangelogLastViewed: (version: string) => void;
 }
 
 export const useSettingsStore = create<SettingsStore>((set, get) => ({
@@ -56,7 +60,7 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
       deviceIdentifier: device_identifier,
       downloadDir: settings.downloadDir,
       homeSort: settings.homeSort || SortOptions.Hot,
-      downloadedScreenSort: settings.downloadedScreenSort || "Old to New",
+      downloadedScreenSort: settings.downloadedScreenSort || "New to Old",
       searchHistory: settings.searchHistory || [],
       isDailyWallpaperEnabled: settings.isDailyWallpaperEnabled || false,
       dailyWallpaperMode: settings.dailyWallpaperMode || "online",
@@ -68,6 +72,7 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
       logsLastSent: settings.logsLastSent || null,
       IsPrivacyPolicyAccepted: settings.IsPrivacyPolicyAccepted || false,
       PrivacyPolicyAcceptedVersion: settings.PrivacyPolicyAcceptedVersion || null,
+      changelogLastViewed: settings.changelogLastViewed || null,
     });
   },
 
@@ -89,7 +94,7 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
     set(newSettings);
   },
 
-  downloadedScreenSort: "Old to New",
+  downloadedScreenSort: "New to Old",
   setDownloadedScreenSort: async (sort: string) => {
     const currentSettings = await getSettings();
     const newSettings = {...currentSettings, downloadedScreenSort: sort};
@@ -187,6 +192,14 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
   setPrivacyPolicyAcceptedVersion: async (version: string | null) => {
     const currentSettings = await getSettings();
     const newSettings = {...currentSettings, PrivacyPolicyAcceptedVersion: version};
+    await AsyncStorage.setItem("settings", JSON.stringify(newSettings));
+    set(newSettings);
+  },
+
+  changelogLastViewed: null,
+  setChangelogLastViewed: async (version: string) => {
+    const currentSettings = await getSettings();
+    const newSettings = {...currentSettings, changelogLastViewed: version};
     await AsyncStorage.setItem("settings", JSON.stringify(newSettings));
     set(newSettings);
   },

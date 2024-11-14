@@ -44,20 +44,24 @@ class Utils {
                 // get online wallpaper
                 val wallpaper = getWallpaperFromReddit(sort)
                 if (wallpaper != null) {
-                    val filepath = "/storage/emulated/0/Pictures/${wallpaper["title"]!!}.${wallpaper["extension"]!!}"
-                    return if (doesFileExist(filepath)) {
-                        filepath // already downloaded
-                    } else {
-                        val item = HashMap<String, Any>()
-                        // start downloading the wallpaper and return the download id
-                        item["downloadId"] = downloadWallpaper(
-                            context,
-                            wallpaper["url"]!!,
-                            wallpaper["title"]!!,
-                            wallpaper["extension"]!!
-                        )
-                        item["path"] = filepath
-                        return item
+                    val location = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
+                    val file = location?.resolve("${wallpaper["title"]!!}.${wallpaper["extension"]!!}")
+                    if (file != null) {
+                        if (file.exists()) {
+                            Log.d("DailyWallpaperUtils", "Wallpaper already downloaded")
+                            return file.absolutePath // already downloaded
+                        } else {
+                            val item = HashMap<String, Any>()
+                            // start downloading the wallpaper and return the download id
+                            item["downloadId"] = downloadWallpaper(
+                                context,
+                                wallpaper["url"]!!,
+                                wallpaper["title"]!!,
+                                wallpaper["extension"]!!
+                            )
+                            item["path"] = file.absolutePath
+                            return item
+                        }
                     }
                 }
                 return null
@@ -106,6 +110,7 @@ class Utils {
                 val file = java.io.File(filepath)
                 return file.exists()
             } catch (e: Exception) {
+                Log.e("DailyWallpaperUtils", "Failed to check if file exists", e)
                 return false
             }
         }
@@ -145,12 +150,12 @@ class Utils {
                         .getJSONArray("resolutions").length() < 1) {
                     continue
                 }
-                val title = obj.getString("title").replace("[\\[(].*?[])]".toRegex(), "")
-                    .trim()
+                val title = obj.getString("title").trim().replace("[\\[(].*?[])]".toRegex(), "")
                     .replace("[^\\x00-\\x7F]".toRegex(), "")
                     .replace("\\u00A0", " ")
                     .replace("\\s{2,}".toRegex(), " ")
                     .replace("[/\\\\#,+()|~%'\":*?<>{}]".toRegex(), "")
+                    .trim()
                     .replace(" ", "_")
                 item["title"] = "${title}_-_${obj.getString("id")}_amoled_droidheat"
                 item["url"] = obj.getString("url")

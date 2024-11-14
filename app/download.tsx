@@ -4,7 +4,7 @@ import {WallpaperPostType} from "@/lib/services/wallpaper_type";
 import {useLocalSearchParams} from "expo-router";
 import {Text} from "@/components/ui/Text";
 import {SafeAreaView} from "react-native-safe-area-context";
-import Animated, {useSharedValue, withTiming, withDelay} from "react-native-reanimated";
+import Animated, {useSharedValue, withTiming} from "react-native-reanimated";
 import {
   ArrowDownCircle,
   ArrowLeft,
@@ -13,11 +13,9 @@ import {
   ExternalLink,
   ImageIcon,
   Maximize2,
-  MessageSquareMore,
 } from "lucide-react-native";
 import {Button, ButtonText} from "@/components/ui/Button";
 import * as WebBrowser from "expo-web-browser";
-import * as FileSystem from "expo-file-system";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import {useDownloadedWallpapersStore} from "@/store/downloaded_wallpapers";
 import {setWallpaper, onChangeListener} from "@/modules/wallpaper-manager";
@@ -46,6 +44,7 @@ export default function DownloadScreen() {
   const filename = `${wallpaper.title
     .replace(/[\/\\#,+()|~%'":*?<>{}]/g, "") // Remove special characters
     .replace(/\s\s+/g, " ") // Remove extra spaces
+    .trim()
     .replaceAll(" ", "_")}_-_${wallpaper.id}_amoled_droidheat`;
   const file_extension = wallpaper.image.url.split(".").pop() || ".png";
 
@@ -63,21 +62,20 @@ export default function DownloadScreen() {
     const saved_file = store.getFile(filename);
     if (saved_file) {
       // Check if file exists in file system
-      FileSystem.getInfoAsync(saved_file.path)
-        .then(() => {
-          setDownloadState({status: "complete", progress: null});
-          setFileSystemPath(saved_file.path);
+      DownloadManager.checkFileExists(saved_file.path)
+        .then(e => {
+          if (e) {
+            setDownloadState({status: "complete", progress: null});
+            setFileSystemPath(saved_file.path);
+          } else {
+            store.removeFile(filename);
+          }
         })
         .catch(() => {
           store.removeFile(filename);
         });
     }
   }, []);
-
-  // Toggle to show comments dialog
-  function showComments() {
-    console.log("Show Comments");
-  }
 
   // Toggle to hide/show the bottom info panel
   function fullScreenWallpaperToggle() {
@@ -135,6 +133,7 @@ export default function DownloadScreen() {
         setDownloadState({status: "complete", progress: null});
         setFileSystemPath(e.path);
         store.addFile({
+          id: wallpaper.id,
           title: wallpaper.title,
           path: e.path,
           width: wallpaper.image.width,
@@ -213,7 +212,7 @@ export default function DownloadScreen() {
             <Button
               variant={"ghost"}
               size={"icon"}
-              className="w-12 h-12 m-2 rounded-lg bg-background/40"
+              className="w-12 h-12 m-2 rounded-lg bg-background/60"
               onPress={() => router.back()}>
               <ArrowLeft size={24} color="white" strokeWidth={1.5} />
             </Button>
@@ -221,7 +220,7 @@ export default function DownloadScreen() {
         </SafeAreaView>
       </View>
       {/* Bottom Info Panel */}
-      <SafeAreaView className="z-20 relative flex-1 flex flex-col">
+      <SafeAreaView className="relative z-20 flex flex-col flex-1">
         <Pressable
           className="absolute top-0 bottom-0 left-0 right-0 z-0"
           onPress={fullScreenWallpaperToggle}></Pressable>
