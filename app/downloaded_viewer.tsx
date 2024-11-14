@@ -26,6 +26,7 @@ export default function DownloadedViewer() {
   const settingStore = useSettingsStore();
   const router = useRouter();
   const isWallpaperOrderReversed = settingStore.downloadedScreenSort === "New to Old";
+  const currentWallpaper = DownloadedStore.files[currentIndex];
 
   // Listeners
   React.useEffect(() => {
@@ -71,7 +72,7 @@ export default function DownloadedViewer() {
   const pressAnim = useSharedValue<number>(0);
   const animationStyle: TAnimationStyle = React.useCallback((value: number) => {
     "worklet";
-    const zIndex = interpolate(value, [-1, 0, 1], [-1000, 0, 1000]);
+    const zIndex = interpolate(value, [-1, 0, 1], [-20, 0, 20]);
     const translateX = interpolate(value, [-1, 0, 1], [-width, 0, width]);
     return {
       transform: [{translateX}],
@@ -119,41 +120,46 @@ export default function DownloadedViewer() {
         defaultIndex={currentIndex}
         renderItem={item => (
           <Animated.View style={[{flex: 1, overflow: "hidden"}, itemStyle]}>
-            <View className="relative">
-              <Image source={{uri: `file://${item.item.path}`}} style={{width: width, height: "100%"}} />
-              <View className="absolute bottom-0 left-0 right-0 w-full bg-background/80">
-                <LinearGradient colors={["rgba(0,0,0,0.1)", "black"]} className="relative z-10 px-4 pt-4 pb-7">
-                  <Text className="text-xl font-bold text-foreground mb-1.5">{item.item.title.trim()}</Text>
-                  <View className="flex flex-row items-center gap-2 p-1 rounded bg-background/80">
-                    <Maximize2 size={16} color="#a1a1aa" />
-                    <Text className="font-semibold text-zinc-400 pe-1">
-                      {item.item.width} x {item.item.height}
-                    </Text>
-                  </View>
-                </LinearGradient>
-                <Animated.View style={[buttonStyle]} className="absolute z-30 -top-6 right-4">
-                  {applyState !== "applied" ? (
-                    <Button variant={"emerald"} onPress={() => applyWallpaper(item.item.path)} className="rounded-full">
-                      <ImageIcon size={16} color="white" />
-                      <ButtonText>Apply</ButtonText>
-                    </Button>
-                  ) : applyState === "applied" ? (
-                    <Button variant={"secondary"} className="rounded-full" disabled>
-                      <CheckCircle size={16} color="white" />
-                      <ButtonText>Applied</ButtonText>
-                    </Button>
-                  ) : (
-                    <Button variant={"accent"} className="rounded-full" disabled>
-                      <LoadingSpinner />
-                    </Button>
-                  )}
-                </Animated.View>
-              </View>
-            </View>
+            <Image source={{uri: `file://${item.item.path}`}} style={{width: width, height: "100%"}} />
           </Animated.View>
         )}
       />
-      <View className="absolute top-0 left-0 right-0 z-30 w-full h-10">
+      <Animated.View style={[buttonStyle]} className="absolute z-30 bottom-0 left-0 right-0 w-full bg-background/80">
+        <LinearGradient
+          colors={["rgba(0,0,0,0.1)", "black"]}
+          className="relative z-10 px-4 pt-4 pb-7 flex flex-row items-center">
+          <View className="flex-1">
+            <Text className="text-xl font-bold text-foreground mb-1.5">{currentWallpaper.title.trim()}</Text>
+            <View className="flex flex-row items-center gap-2 p-1 rounded bg-background/80">
+              <Maximize2 size={16} color="#a1a1aa" />
+              <Text className="font-semibold text-zinc-400 pe-1">
+                {currentWallpaper.width} x {currentWallpaper.height}
+              </Text>
+            </View>
+          </View>
+          <View>
+            {applyState !== "applied" ? (
+              <Button
+                variant={"emerald"}
+                onPress={() => applyWallpaper(currentWallpaper.path)}
+                className="rounded-full">
+                <ImageIcon size={16} color="white" />
+                <ButtonText>Apply</ButtonText>
+              </Button>
+            ) : applyState === "applied" ? (
+              <Button variant={"secondary"} className="rounded-full" disabled>
+                <CheckCircle size={16} color="white" />
+                <ButtonText>Applied</ButtonText>
+              </Button>
+            ) : (
+              <Button variant={"accent"} className="rounded-full" disabled>
+                <LoadingSpinner />
+              </Button>
+            )}
+          </View>
+        </LinearGradient>
+      </Animated.View>
+      <View className="absolute top-0 left-0 right-0 z-30 w-full h-24">
         <SafeAreaView>
           <View className="flex flex-row gap-4 items-center">
             <Button
