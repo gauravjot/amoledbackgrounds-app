@@ -15,6 +15,7 @@ import Select from "@/components/ui/Select";
 import {useSettingsStore} from "@/store/settings";
 import {hasPermissionForStorage, requestStoragePermissionsAsync} from "@/modules/download-manager";
 import * as WebBrowser from "expo-web-browser";
+import {useNavigation, useRouter} from "expo-router";
 
 type WallpaperApplyState = {
   status: "idle" | "applying" | "applied" | "error";
@@ -135,13 +136,18 @@ function WallpaperGridItem({
   applyWallpaper: () => void;
 }) {
   const [isOpen, setIsOpen] = React.useState(false);
+  const router = useRouter();
+
+  function openDownloadedViewerScreen(path: string) {
+    router.push({pathname: "/downloaded_viewer", params: {path: path}});
+  }
 
   const deleteWallpaper = async () => {};
 
   return (
     <Animated.View entering={FadeIn} className="pb-2" style={{flex: 0.5}}>
       <View className="flex flex-col h-[26rem]">
-        <View className="relative flex-1 web:block">
+        <Pressable className="relative flex-1 web:block" onPress={() => openDownloadedViewerScreen(wallpaper.path)}>
           <Animated.View
             style={fadingPulseAnimation(3000)}
             className="absolute top-0 left-0 z-0 w-full h-full rounded-lg bg-foreground/20"></Animated.View>
@@ -177,25 +183,27 @@ function WallpaperGridItem({
               <ButtonText>Set</ButtonText>
             </Button>
           )}
-        </View>
+        </Pressable>
         <View className="flex flex-row items-center">
           <View className="flex-1">
-            <Text numberOfLines={1} className="mt-2 font-semibold">
-              {wallpaper.title}
-            </Text>
-            {wallpaper.width !== null &&
-            wallpaper.height !== null &&
-            !isNaN(wallpaper.width) &&
-            !isNaN(wallpaper.height) ? (
-              <View className="mt-1.5 flex flex-row gap-1.5 items-center">
-                <Maximize2 size={12} color="#71717a" />
-                <Text className="text-sm font-medium text-zinc-500">
-                  {wallpaper.width} x {wallpaper.height}
-                </Text>
-              </View>
-            ) : (
-              <></>
-            )}
+            <Pressable onPress={() => openDownloadedViewerScreen(wallpaper.path)}>
+              <Text numberOfLines={1} className="mt-2 font-semibold">
+                {wallpaper.title}
+              </Text>
+              {wallpaper.width !== null &&
+              wallpaper.height !== null &&
+              !isNaN(wallpaper.width) &&
+              !isNaN(wallpaper.height) ? (
+                <View className="mt-1.5 flex flex-row gap-1.5 items-center">
+                  <Maximize2 size={12} color="#71717a" />
+                  <Text className="text-sm font-medium text-zinc-500">
+                    {wallpaper.width} x {wallpaper.height}
+                  </Text>
+                </View>
+              ) : (
+                <></>
+              )}
+            </Pressable>
           </View>
           <View className="relative">
             <Button
