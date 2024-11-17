@@ -1,7 +1,6 @@
 import {FlatList, TextInput, View} from "react-native";
 import React from "react";
 import {Text} from "@/components/ui/Text";
-import {SafeAreaView} from "react-native-safe-area-context";
 import OnlineWallpaperGridItem from "@/components/OnlineWallpaperGridItem";
 import {PaginationType, WallpaperPostType} from "@/lib/services/wallpaper_type";
 import {useMutation} from "@tanstack/react-query";
@@ -105,7 +104,7 @@ export default function SearchScreen() {
   });
 
   return (
-    <SafeAreaView className="bg-background">
+    <>
       <View className="h-screen bg-background">
         <LinearGradient colors={["black", "rgba(0,0,0,0.25)"]} className="absolute top-0 right-0 z-10 w-screen">
           <View className="w-screen bg-background/80">
@@ -198,7 +197,7 @@ export default function SearchScreen() {
               );
             } else if ((posts?.pagination.page_number ?? 0) > 0 && posts?.pagination.after != null) {
               return (
-                <View className="flex flex-row items-center gap-3 justify-center w-full mb-24 h-64">
+                <View className="flex flex-row items-center justify-center w-full h-64 gap-3 mb-24">
                   <LoadingSpinner size={24} color="#676767" />
                   <Animated.View style={fadingPulseAnimation(4500)}>
                     <Text className="text-sm text-zinc-200">Loading more...</Text>
@@ -209,6 +208,6 @@ export default function SearchScreen() {
           }}
         />
       </View>
-    </SafeAreaView>
+    </>
   );
 }

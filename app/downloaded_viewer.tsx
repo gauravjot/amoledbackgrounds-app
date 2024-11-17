@@ -1,22 +1,30 @@
 import {Button, ButtonText} from "@/components/ui/Button";
 import {Text} from "@/components/ui/Text";
-import {onChangeListener, setWallpaper} from "@/modules/wallpaper-manager";
+import * as WallpaperManager from "@/modules/wallpaper-manager";
 import {useDownloadedWallpapersStore} from "@/store/downloaded_wallpapers";
 import {LinearGradient} from "expo-linear-gradient";
 import {ArrowLeft, CheckCircle, ImageIcon, Maximize2, MoreVertical} from "lucide-react-native";
 import * as React from "react";
 import {Dimensions, Image, ToastAndroid, View} from "react-native";
-import Carousel, {TAnimationStyle} from "react-native-reanimated-carousel";
+import Carousel from "react-native-reanimated-carousel";
 import * as SqlUtility from "@/lib/utils/sql";
 import {useSettingsStore} from "@/store/settings";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import {useLocalSearchParams, useRouter} from "expo-router";
 import {SafeAreaView} from "react-native-safe-area-context";
-import Animated, {interpolate, useAnimatedStyle, useSharedValue, withTiming} from "react-native-reanimated";
+import Animated, {
+  SharedValue,
+  interpolate,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from "react-native-reanimated";
+import {useEvent} from "expo";
 
 type WallpaperApplyState = "idle" | "applying" | "applied" | "error";
 
 export default function DownloadedViewer() {
+  const WallpaperChangeListener = useEvent(WallpaperManager.Module, WallpaperManager.ChangeEvent);
   const params = useLocalSearchParams();
   const [currentIndex, setCurrentIndex] = React.useState<number>(0);
   const [applyState, setApplyState] = React.useState<WallpaperApplyState>("idle");
@@ -26,29 +34,30 @@ export default function DownloadedViewer() {
   const settingStore = useSettingsStore();
   const router = useRouter();
   const isWallpaperOrderReversed = settingStore.downloadedScreenSort === "New to Old";
-  const currentWallpaper = DownloadedStore.files[currentIndex];
+  const wallpapers = isWallpaperOrderReversed ? DownloadedStore.files.slice().reverse() : DownloadedStore.files;
+  const currentWallpaper = wallpapers[currentIndex];
 
-  // Listeners
   React.useEffect(() => {
-    setCurrentIndex(DownloadedStore.files.findIndex(file => file.path === params["path"]));
-
-    // wallpaper change listener
-    const wallpaperChangeListener = onChangeListener(e => {
-      setApplyState(e.success ? "applied" : "error");
-      ToastAndroid.show(e.success ? "Wallpaper applied" : "Failed to apply wallpaper", ToastAndroid.SHORT);
-    });
-
-    return () => {
-      // When component is killed, clear all listeners
-      wallpaperChangeListener.remove();
-    };
+    setCurrentIndex(wallpapers.findIndex(file => file.path === params["path"]));
   }, []);
+
+  // Wallpaper change listener
+  React.useEffect(() => {
+    // wallpaper change listener
+    const wallpaper_change_event = WallpaperChangeListener as WallpaperManager.ChangeEventType | null;
+    if (wallpaper_change_event !== null) {
+      setApplyState(wallpaper_change_event.success ? "applied" : "error");
+      if (!wallpaper_change_event.success) {
+        ToastAndroid.show("Failed to apply wallpaper", ToastAndroid.SHORT);
+      }
+    }
+  }, [WallpaperChangeListener]);
 
   // Apply wallpaper
   const applyWallpaper = async (path: string) => {
     try {
       setApplyState("applying");
-      await setWallpaper(path as string);
+      await WallpaperManager.setWallpaper(path as string);
     } catch (error) {
       // Log error
       SqlUtility.insertErrorLog(
@@ -70,22 +79,13 @@ export default function DownloadedViewer() {
 
   // Animations
   const pressAnim = useSharedValue<number>(0);
-  const animationStyle: TAnimationStyle = React.useCallback((value: number) => {
+  const animationStyle = React.useCallback((value: number) => {
     "worklet";
     const zIndex = interpolate(value, [-1, 0, 1], [-20, 0, 20]);
     const translateX = interpolate(value, [-1, 0, 1], [-width, 0, width]);
     return {
       transform: [{translateX}],
       zIndex,
-    };
-  }, []);
-  const itemStyle = useAnimatedStyle(() => {
-    const scale = interpolate(pressAnim.value, [0, 1], [1, 0.9]);
-    const borderRadius = interpolate(pressAnim.value, [0, 1], [0, 30]);
-
-    return {
-      transform: [{scale}],
-      borderRadius,
     };
   }, []);
   const buttonStyle = useAnimatedStyle(() => {
@@ -104,7 +104,8 @@ export default function DownloadedViewer() {
         height={height}
         style={{flex: 1, height: "100%"}}
         autoPlay={false}
-        data={DownloadedStore.files}
+        windowSize={2}
+        data={wallpapers}
         scrollAnimationDuration={100}
         customAnimation={animationStyle}
         onScrollBegin={() => {
@@ -118,24 +119,22 @@ export default function DownloadedViewer() {
           setApplyState("idle");
         }}
         defaultIndex={currentIndex}
-        renderItem={item => (
-          <Animated.View style={[{flex: 1, overflow: "hidden"}, itemStyle]}>
-            <Image source={{uri: `file://${item.item.path}`}} style={{width: width, height: "100%"}} />
-          </Animated.View>
-        )}
+        renderItem={item => <CarouselItem path={item.item.path} width={width} height={height} pressAnim={pressAnim} />}
       />
-      <Animated.View style={[buttonStyle]} className="absolute z-30 bottom-0 left-0 right-0 w-full bg-background/80">
+      <Animated.View style={[buttonStyle]} className="absolute bottom-0 left-0 right-0 z-30 w-full bg-background/80">
         <LinearGradient
           colors={["rgba(0,0,0,0.1)", "black"]}
-          className="relative z-10 px-4 pt-4 pb-7 flex flex-row items-center">
+          className="relative z-10 flex flex-row items-center px-4 pt-4 pb-7">
           <View className="flex-1">
             <Text className="text-xl font-bold text-foreground mb-1.5">{currentWallpaper.title.trim()}</Text>
-            <View className="flex flex-row items-center gap-2 p-1 rounded bg-background/80">
-              <Maximize2 size={16} color="#a1a1aa" />
-              <Text className="font-semibold text-zinc-400 pe-1">
-                {currentWallpaper.width} x {currentWallpaper.height}
-              </Text>
-            </View>
+            {currentWallpaper.width && currentWallpaper.height && (
+              <View className="flex flex-row items-center gap-2 p-1 rounded bg-background/80">
+                <Maximize2 size={16} color="#a1a1aa" />
+                <Text className="font-semibold text-zinc-400 pe-1">
+                  {currentWallpaper.width} x {currentWallpaper.height}
+                </Text>
+              </View>
+            )}
           </View>
           <View>
             {applyState !== "applied" ? (
@@ -161,7 +160,7 @@ export default function DownloadedViewer() {
       </Animated.View>
       <View className="absolute top-0 left-0 right-0 z-30 w-full h-24">
         <SafeAreaView>
-          <View className="flex flex-row gap-4 items-center">
+          <View className="flex flex-row items-center gap-4">
             <Button
               variant={"ghost"}
               size={"icon"}
@@ -169,11 +168,9 @@ export default function DownloadedViewer() {
               onPress={() => router.back()}>
               <ArrowLeft size={24} color="white" strokeWidth={1.5} />
             </Button>
-            <View className="flex-1 flex flex-row">
-              <Text className="text-lg font-bold bg-background/60 rounded-lg h-12 align-middle px-4">
-                Viewing{" "}
-                {(isWallpaperOrderReversed ? DownloadedStore.files.length - 1 - currentIndex : currentIndex) + 1} of{" "}
-                {DownloadedStore.files.length}
+            <View className="flex flex-row flex-1">
+              <Text className="h-12 px-4 text-lg font-bold align-middle rounded-lg bg-background/60">
+                Viewing {currentIndex + 1} of {wallpapers.length}
               </Text>
             </View>
             <View>
@@ -191,3 +188,31 @@ export default function DownloadedViewer() {
     </View>
   );
 }
+
+const CarouselItem = ({
+  path,
+  width,
+  height,
+  pressAnim,
+}: {
+  path: string;
+  width: number;
+  height: number;
+  pressAnim: SharedValue<number>;
+}) => {
+  const itemStyle = useAnimatedStyle(() => {
+    const scale = interpolate(pressAnim.value, [0, 1], [1, 0.9]);
+    const borderRadius = interpolate(pressAnim.value, [0, 1], [0, 30]);
+
+    return {
+      transform: [{scale}],
+      borderRadius,
+    };
+  }, []);
+
+  return (
+    <Animated.View style={[{flex: 1, overflow: "hidden"}, itemStyle]}>
+      <Image source={{uri: `file://${path}`}} width={width} height={height} />
+    </Animated.View>
+  );
+};

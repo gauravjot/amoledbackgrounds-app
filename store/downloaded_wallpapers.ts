@@ -22,16 +22,16 @@ export const useDownloadedWallpapersStore = create<DownloadedWallpaperStore>((se
       return {files: [...state.files, file]};
     });
   },
-  removeFile: (filename: string) => {
+  removeFile: (uri: string) => {
     set(state => {
-      return {files: state.files.filter(file => !file.path.includes(filename))};
+      return {files: state.files.filter(file => !file.path.includes(uri))};
     });
   },
   setFiles: (files: DownloadedWallpaperPostType[]) => {
     set({files: files});
   },
-  exists: (filename: string) => get().files.some(file => file.path.includes(filename)),
-  getFile: (filename: string) => get().files.find(file => file.path.includes(filename)),
+  exists: (uri: string) => get().files.some(file => file.path.includes(uri)),
+  getFile: (uri: string) => get().files.find(file => file.path.includes(uri)),
 }));
 
 const getDownloadedWallpapers = async () => {

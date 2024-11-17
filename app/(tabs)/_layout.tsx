@@ -9,6 +9,7 @@ import {Colors} from "@/constants/colors";
 import ChangeLogDialog from "@/components/ChangeLog";
 import {useSettingsStore} from "@/store/settings";
 import Constants from "expo-constants";
+import {SafeAreaView} from "react-native-safe-area-context";
 
 const TABS: {
   [key: string]: {name: string; Icon: LucideIcon; sort: number};
@@ -24,19 +25,20 @@ export default function TabLayout() {
   const version = Constants.expoConfig?.version ?? "Unknown";
 
   return (
-    <View className="flex-1 bg-background">
+    <SafeAreaView className="flex-1 bg-background">
       <Tabs
         tabBar={props => <TabBar state={props.state} descriptors={props.descriptors} navigation={props.navigation} />}
         screenOptions={{
           headerShown: false,
-        }}></Tabs>
+        }}
+      />
       <ChangeLogDialog
         isVisible={store.changelogLastViewed !== version}
         onClose={() => {
           store.setChangelogLastViewed(version);
         }}
       />
-    </View>
+    </SafeAreaView>
   );
 }
 

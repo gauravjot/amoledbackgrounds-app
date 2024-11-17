@@ -1,7 +1,6 @@
 import {Pressable, ScrollView, ToastAndroid, View} from "react-native";
 import React from "react";
 import {Text} from "@/components/ui/Text";
-import {SafeAreaView} from "react-native-safe-area-context";
 import TopBar from "@/components/ui/TopBar";
 import {Switch} from "@/components/ui/Switch";
 import Constants from "expo-constants";
@@ -33,7 +32,7 @@ export default function SettingsScreen() {
   const [showChangeLog, setShowChangeLog] = React.useState(false);
 
   return (
-    <SafeAreaView className="flex-1 bg-background">
+    <>
       <TopBar title="Settings">
         <Button
           variant={"outline"}
@@ -58,11 +57,10 @@ export default function SettingsScreen() {
                 store.setDailyWallpaperEnabled(e);
                 if (e) {
                   try {
-                    const result = await registerDailyWallpaperService(
+                    await registerDailyWallpaperService(
                       store.dailyWallpaperMode,
                       getURIFromSort(store.dailyWallpaperSort),
                     );
-                    ToastAndroid.showWithGravity(result, ToastAndroid.SHORT, ToastAndroid.CENTER);
                   } catch (err) {
                     SqlUtility.insertErrorLog(
                       {
@@ -82,7 +80,6 @@ export default function SettingsScreen() {
                   }
                 } else {
                   await unregisterDailyWallpaperService();
-                  ToastAndroid.showWithGravity("Disabled", ToastAndroid.SHORT, ToastAndroid.CENTER);
                 }
               }}
             />
@@ -203,7 +200,7 @@ export default function SettingsScreen() {
           setShowChangeLog(false);
         }}
       />
-    </SafeAreaView>
+    </>
   );
 }
 
