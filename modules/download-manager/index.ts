@@ -1,7 +1,6 @@
 // Import the native module. On web, it will be resolved to DownloadManager.web.ts
 // and on native platforms to DownloadManager.ts
 import DownloadManagerModule from "./src/DownloadManagerModule";
-import DownloadManagerView from "./src/DownloadManagerView";
 import {ChangeEventPayload, DownloadManagerViewProps} from "./src/DownloadManager.types";
 
 export const Module = DownloadManagerModule;
@@ -47,4 +46,4 @@ export function openAppInDeviceSettings(): void {
 }
 
 // Export types
-export {DownloadManagerView, DownloadManagerViewProps, ChangeEventPayload};
+export {DownloadManagerViewProps, ChangeEventPayload};

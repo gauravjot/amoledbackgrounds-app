@@ -176,8 +176,8 @@ export default function SearchScreen() {
             }
           }}
           className="z-0 w-full px-3 pt-20"
-          columnWrapperClassName="gap-4"
-          contentContainerClassName="gap-4"
+          columnWrapperClassName="gap-3"
+          contentContainerClassName="gap-3"
           renderItem={({item}) => <OnlineWallpaperGridItem {...item} />}
           ListHeaderComponent={() =>
             posts?.posts && posts.posts.length > 0 ? (
@@ -191,13 +191,13 @@ export default function SearchScreen() {
           ListFooterComponent={() => {
             if (posts?.posts && posts.posts.length > 0 && posts.pagination.after === null) {
               return (
-                <View className="flex items-center justify-start w-full mb-16 h-72">
-                  <Text className="px-4 pt-12 text-sm text-zinc-400">End of posts for current filter</Text>
+                <View className="flex flex-row justify-center w-full pt-16 pb-24 mb-48">
+                  <Text className="px-4 text-sm text-zinc-400">End of posts for current filter</Text>
                 </View>
               );
             } else if ((posts?.pagination.page_number ?? 0) > 0 && posts?.pagination.after != null) {
               return (
-                <View className="flex flex-row items-center justify-center w-full h-64 gap-3 mb-24">
+                <View className="flex flex-row items-center justify-center w-full gap-2 pt-16 pb-24 mb-48">
                   <LoadingSpinner size={24} color="#676767" />
                   <Animated.View style={fadingPulseAnimation(4500)}>
                     <Text className="text-sm text-zinc-200">Loading more...</Text>

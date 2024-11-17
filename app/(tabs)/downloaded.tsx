@@ -15,6 +15,7 @@ import {hasPermissionForStorage, requestStoragePermissionsAsync} from "@/modules
 import * as WebBrowser from "expo-web-browser";
 import {useRouter} from "expo-router";
 import {useEvent} from "expo";
+import * as SqlUtility from "@/lib/utils/sql";
 
 type WallpaperApplyState = {
   status: "idle" | "applying" | "applied" | "error";
@@ -25,6 +26,7 @@ export default function DownloadedWallpapersScreen() {
   const WallpaperChangeListener = useEvent(WallpaperManager.Module, WallpaperManager.ChangeEvent);
   const store = useSettingsStore();
   const DownloadedWallpaperStore = useDownloadedWallpapersStore();
+  const settingStore = useSettingsStore();
   const [applyState, setApplyState] = React.useState<WallpaperApplyState>({status: "idle", path: ""});
   const flatListRef = React.useRef<FlatList>(null);
 
@@ -55,6 +57,29 @@ export default function DownloadedWallpapersScreen() {
       }
     }
   }, [WallpaperChangeListener]);
+
+  const setWallpaper = async (wallpaper: DownloadedWallpaperPostType) => {
+    setApplyState({status: "applying", path: wallpaper.path});
+    try {
+      await WallpaperManager.setWallpaper(wallpaper.path);
+    } catch (error) {
+      setApplyState({status: "error", path: wallpaper.path});
+      SqlUtility.insertErrorLog(
+        {
+          file: "downloaded.tsx[DownloadedWallpaperScreen]",
+          description: "Error while applying wallpaper",
+          error_title: error instanceof Error ? error.name : "Error",
+          method: "setWallpaper",
+          params: JSON.stringify({
+            wallpaper: JSON.stringify(wallpaper),
+          }),
+          severity: "error",
+          stacktrace: error instanceof Error ? error.stack || error.message : "",
+        },
+        settingStore.deviceIdentifier,
+      );
+    }
+  };
 
   const removeWallpaper = (wallpaper: DownloadedWallpaperPostType) => {
     DownloadedWallpaperStore.removeFile(wallpaper.path);
@@ -112,16 +137,14 @@ export default function DownloadedWallpapersScreen() {
             <WallpaperGridItem
               wallpaper={item}
               applyState={applyState.path === item.path ? applyState.status : "idle"}
-              applyWallpaper={async () => {
-                setApplyState({status: "applying", path: item.path});
-                await WallpaperManager.setWallpaper(item.path);
-              }}
+              applyWallpaper={async () => await setWallpaper(item)}
               removeWallpaper={() => removeWallpaper(item)}
+              deviceIdentifier={settingStore.deviceIdentifier}
             />
           )}
           ListFooterComponent={() => (
-            <View className="flex items-center justify-start w-full mb-16 h-52">
-              <Text className="px-4 pt-12 text-sm text-zinc-400">End of posts for current filter</Text>
+            <View className="flex flex-row justify-center w-full pt-16 pb-24 mb-48">
+              <Text className="px-4 text-sm text-zinc-400">End of posts for current filter</Text>
             </View>
           )}
         />
@@ -135,11 +158,13 @@ function WallpaperGridItem({
   applyState,
   applyWallpaper,
   removeWallpaper,
+  deviceIdentifier,
 }: {
   wallpaper: DownloadedWallpaperPostType;
   applyState: "idle" | "applying" | "applied" | "error";
   applyWallpaper: () => void;
   removeWallpaper: () => void;
+  deviceIdentifier: string;
 }) {
   const width = Dimensions.get("window").width;
   const height = Dimensions.get("window").height;
@@ -151,12 +176,29 @@ function WallpaperGridItem({
   }
 
   const deleteWallpaper = async () => {
-    const e = await WallpaperManager.deleteWallpaper(wallpaper.path);
-    if (e) {
-      removeWallpaper();
-      setIsOpen(false);
-    } else {
-      ToastAndroid.show("Failed to delete wallpaper", ToastAndroid.SHORT);
+    try {
+      const e = await WallpaperManager.deleteWallpaper(wallpaper.path);
+      if (e) {
+        removeWallpaper();
+        setIsOpen(false);
+      } else {
+        ToastAndroid.show("Failed to delete wallpaper", ToastAndroid.SHORT);
+      }
+    } catch (error) {
+      SqlUtility.insertErrorLog(
+        {
+          file: "downloaded.tsx[WallpaperGridItem]",
+          description: "Error while deleting wallpaper",
+          error_title: error instanceof Error ? error.name : "Error",
+          method: "deleteWallpaper",
+          params: JSON.stringify({
+            wallpaper: JSON.stringify(wallpaper),
+          }),
+          severity: "error",
+          stacktrace: error instanceof Error ? error.stack || error.message : "",
+        },
+        deviceIdentifier,
+      );
     }
   };
 

@@ -5,11 +5,9 @@ import expo.modules.kotlin.modules.ModuleDefinition
 import androidx.preference.PreferenceManager
 import android.util.Log
 import androidx.work.ExistingPeriodicWorkPolicy
-import androidx.work.PeriodicWorkRequest
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import java.util.Date
-import java.util.UUID
 
 class DailyWallpaperModule : Module() {
 
@@ -70,15 +68,6 @@ class DailyWallpaperModule : Module() {
     Function("changeSort") { sort: String ->
         val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
         sharedPreferences.edit().putString("sort", sort).apply()
-    }
-
-    // Enables the module to be used as a native view. Definition components that are accepted as part of
-    // the view definition: Prop, Events.
-    View(DailyWallpaperView::class) {
-      // Defines a setter for the `name` prop.
-      Prop("name") { _: DailyWallpaperView, prop: String ->
-        println(prop)
-      }
     }
   }
 
