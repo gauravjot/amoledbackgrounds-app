@@ -171,13 +171,13 @@ export default function HomeScreen() {
           ListFooterComponent={() => {
             if (posts && posts.pagination.after === null) {
               return (
-                <View className="flex items-center justify-start w-full h-64 mb-20">
-                  <Text className="px-4 pt-12 text-sm text-zinc-400">End of posts for current filter</Text>
+                <View className="flex flex-row justify-center w-full pt-16 pb-24 mb-48">
+                  <Text className="px-4 text-sm text-zinc-400">End of posts for current filter</Text>
                 </View>
               );
             } else if ((posts?.pagination.page_number ?? 0) > 0) {
               return (
-                <View className="flex flex-row items-center justify-center w-full h-64 gap-3 mb-24">
+                <View className="flex flex-row items-center justify-center w-full gap-2 pt-16 pb-24 mb-48">
                   <LoadingSpinner size={24} color="#676767" />
                   <Animated.View style={fadingPulseAnimation(4500)}>
                     <Text className="text-sm text-zinc-200">Loading more...</Text>

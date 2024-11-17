@@ -3,9 +3,9 @@ import {Text} from "@/components/ui/Text";
 import * as WallpaperManager from "@/modules/wallpaper-manager";
 import {useDownloadedWallpapersStore} from "@/store/downloaded_wallpapers";
 import {LinearGradient} from "expo-linear-gradient";
-import {ArrowLeft, CheckCircle, ImageIcon, Maximize2, MoreVertical} from "lucide-react-native";
+import {ArrowLeft, CheckCircle, ExternalLink, ImageIcon, Maximize2, MoreVertical, Trash2} from "lucide-react-native";
 import * as React from "react";
-import {Dimensions, Image, ToastAndroid, View} from "react-native";
+import {Dimensions, Image, Pressable, ToastAndroid, View} from "react-native";
 import Carousel from "react-native-reanimated-carousel";
 import * as SqlUtility from "@/lib/utils/sql";
 import {useSettingsStore} from "@/store/settings";
@@ -13,6 +13,10 @@ import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import {useLocalSearchParams, useRouter} from "expo-router";
 import {SafeAreaView} from "react-native-safe-area-context";
 import Animated, {
+  FadeInDown,
+  FadeInUp,
+  FadeOutDown,
+  FadeOutUp,
   SharedValue,
   interpolate,
   useAnimatedStyle,
@@ -20,6 +24,7 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import {useEvent} from "expo";
+import * as WebBrowser from "expo-web-browser";
 
 type WallpaperApplyState = "idle" | "applying" | "applied" | "error";
 
@@ -28,6 +33,7 @@ export default function DownloadedViewer() {
   const params = useLocalSearchParams();
   const [currentIndex, setCurrentIndex] = React.useState<number>(0);
   const [applyState, setApplyState] = React.useState<WallpaperApplyState>("idle");
+  const [isOptionsMenuOpen, setIsOptionsMenuOpen] = React.useState(false);
   const width = Dimensions.get("window").width;
   const height = Dimensions.get("window").height;
   const DownloadedStore = useDownloadedWallpapersStore();
@@ -97,6 +103,23 @@ export default function DownloadedViewer() {
     };
   }, []);
 
+  const deleteWallpaper = async () => {
+    const e = await WallpaperManager.deleteWallpaper(currentWallpaper.path);
+    if (e) {
+      if (currentIndex === 0 && wallpapers.length === 1) {
+        router.back();
+      } else if (currentIndex === wallpapers.length - 1) {
+        setCurrentIndex(currentIndex - 1);
+      } else {
+        setCurrentIndex(currentIndex + 1);
+      }
+      DownloadedStore.removeFile(currentWallpaper.path);
+      setIsOptionsMenuOpen(false);
+    } else {
+      ToastAndroid.show("Failed to delete wallpaper", ToastAndroid.SHORT);
+    }
+  };
+
   return (
     <View style={{flex: 1}}>
       <Carousel
@@ -158,7 +181,7 @@ export default function DownloadedViewer() {
           </View>
         </LinearGradient>
       </Animated.View>
-      <View className="absolute top-0 left-0 right-0 z-30 w-full h-24">
+      <View className="absolute top-0 left-0 right-0 z-30 w-full">
         <SafeAreaView>
           <View className="flex flex-row items-center gap-4">
             <Button
@@ -178,13 +201,44 @@ export default function DownloadedViewer() {
                 variant={"ghost"}
                 size={"icon"}
                 className="w-12 h-12 m-2 rounded-lg bg-background/60"
-                onPress={() => router.back()}>
+                onPress={() => setIsOptionsMenuOpen(true)}>
                 <MoreVertical size={24} color="white" strokeWidth={1.5} />
               </Button>
+              {isOptionsMenuOpen && (
+                <Animated.View entering={FadeInUp} exiting={FadeOutUp} className="absolute z-50 right-3 top-14">
+                  <View className="rounded-md shadow-md bg-zinc-900" style={{width: 160}}>
+                    <Button
+                      variant={"ghost"}
+                      className="justify-start h-12 gap-3 px-4 py-2 text-base"
+                      onPress={async () => {
+                        await WebBrowser.openBrowserAsync(
+                          "https://www.reddit.com/r/Amoledbackgrounds/comments/" + currentWallpaper.id,
+                        );
+                      }}>
+                      <ExternalLink size={16} color="#ffffff" />
+                      <ButtonText>See on Reddit</ButtonText>
+                    </Button>
+                    <Button
+                      variant={"ghost"}
+                      className="justify-start h-12 gap-3 px-4 py-2 text-base"
+                      onPress={deleteWallpaper}>
+                      <Trash2 size={16} color="#f87171" />
+                      <ButtonText numberOfLines={1} className="text-red-400">
+                        Delete
+                      </ButtonText>
+                    </Button>
+                  </View>
+                </Animated.View>
+              )}
             </View>
           </View>
         </SafeAreaView>
       </View>
+      {/* catch outside presses */}
+      <Pressable
+        onPress={() => setIsOptionsMenuOpen(false)}
+        className={`${!isOptionsMenuOpen && "hidden"} absolute -top-96 -right-96 z-20 w-[200vh] h-[200vh]`}
+      />
     </View>
   );
 }

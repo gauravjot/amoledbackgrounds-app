@@ -105,8 +105,8 @@ export default function SettingsScreen() {
                   width={140}
                 />
               </View>
-              <View>
-                {store.dailyWallpaperMode === "online" && (
+              {store.dailyWallpaperMode === "online" && (
+                <View>
                   <Select
                     defaultValue={store.dailyWallpaperSort}
                     options={Object.keys(SortOptions)}
@@ -116,8 +116,8 @@ export default function SettingsScreen() {
                     }}
                     width={140}
                   />
-                )}
-              </View>
+                </View>
+              )}
             </View>
 
             <SettingSwitchComponent
@@ -222,7 +222,7 @@ function SettingSwitchComponent({
           <Text className="mb-1 font-bold text-[16.5px]">{title}</Text>
           <Text className="text-sm text-zinc-400">{description}</Text>
         </View>
-        <View>
+        <View className="pt-0.5">
           <Switch checked={isEnabled} onCheckedChange={onChange} />
         </View>
       </View>

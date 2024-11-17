@@ -51,6 +51,11 @@ export default function DownloadScreen() {
     .trim()
     .replaceAll(" ", "_")}_-_${wallpaper.id}_amoled_droidheat`;
   const file_extension = wallpaper.image.url.split(".").pop() || ".png";
+  const old_filename = `${wallpaper.title
+    .replace(/[\/\\#,+()|~%'":*?<>{}]/g, "") // Remove special characters
+    .replace(/\s\s+/g, " ") // Remove extra spaces
+    .trim()
+    .replaceAll(" ", "_")}_t3_${wallpaper.id}_amoled_droidheat`;
 
   // Store to save downloaded wallpapers to
   const store = useDownloadedWallpapersStore();
@@ -63,7 +68,7 @@ export default function DownloadScreen() {
   // On start of the screen
   // check if current wallpaper is downloaded
   React.useEffect(() => {
-    const saved_file = store.getFile(filename);
+    let saved_file = store.getFile(`${wallpaper.id}_amoled_droidheat`);
     if (saved_file) {
       // Check if file exists in file system
       DownloadManager.checkFileExists(saved_file.path)
@@ -72,11 +77,11 @@ export default function DownloadScreen() {
             setDownloadState({status: "complete", progress: null});
             setFileSystemPath(saved_file.path);
           } else {
-            store.removeFile(filename);
+            store.removeFile(saved_file.path);
           }
         })
         .catch(() => {
-          store.removeFile(filename);
+          store.removeFile(saved_file.path);
         });
     }
   }, []);
@@ -181,7 +186,7 @@ export default function DownloadScreen() {
       // Log error
       SqlUtility.insertErrorLog(
         {
-          file: "download.tsx[DownloadScreen.tsx]",
+          file: "download.tsx[DownloadScreen]",
           description: "Error while applying wallpaper",
           error_title: error instanceof Error ? error.name : "Applying wallpaper fail",
           method: "applyWallpaper",

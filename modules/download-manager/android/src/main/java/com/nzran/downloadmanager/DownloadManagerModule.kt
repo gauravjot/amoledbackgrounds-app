@@ -38,7 +38,7 @@ class DownloadManagerModule : Module() {
   private val context
   get() = requireNotNull(appContext.reactContext)
 
-  private val DOWNLOAD_LOCATION = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
+  private val downloadLocation = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
 
   private val executor = Executors.newSingleThreadExecutor()
   var isDownloadComplete = false
@@ -62,8 +62,8 @@ class DownloadManagerModule : Module() {
 
 
     // Download image function
-    Function("downloadImage") { url: String, filename: String, file_extension: String ->
-      downloadImage(context, url, filename, file_extension)
+    Function("downloadImage") { url: String, filename: String, fileExtension: String ->
+      downloadImage(context, url, filename, fileExtension)
     }
 
     // Event to notify
@@ -98,7 +98,7 @@ class DownloadManagerModule : Module() {
             }
             val fileMap = HashMap<String, String>()
             fileMap["name"] = name
-            fileMap["path"] = DOWNLOAD_LOCATION.resolve(name).absolutePath
+            fileMap["path"] = downloadLocation.resolve(name).absolutePath
             fileMap["width"] = cursor.getStringOrNull(cursor.getColumnIndex(MediaStore.Images.Media.WIDTH)) ?: ""
             fileMap["height"] = cursor.getStringOrNull(cursor.getColumnIndex(MediaStore.Images.Media.HEIGHT)) ?: ""
             result.add(fileMap)
@@ -142,15 +142,6 @@ class DownloadManagerModule : Module() {
     AsyncFunction("checkFileExists") { path: String ->
       val file = File(path)
       return@AsyncFunction file.exists()
-    }
-
-    // Enables the module to be used as a native view. Definition components that are accepted as part of
-    // the view definition: Prop, Events.
-    View(DownloadManagerView::class) {
-      // Defines a setter for the `name` prop.
-      Prop("name") { _: DownloadManagerView, prop: String ->
-        println(prop)
-      }
     }
   }
 
@@ -252,13 +243,13 @@ class DownloadManagerModule : Module() {
   // Send event to JavaScript after processing downloaded file
   fun sendDownloadedFileInfo() {
     try {
-      var file = File(DOWNLOAD_LOCATION,"$filename.download")
+      var file = File(downloadLocation,"$filename.download")
       if (!file.exists()) {
         throw Exception("Downloaded file not found")
       }
       // rename file to remove .download extension
       Files.move(file.toPath(), file.toPath().resolveSibling("$filename.$fileExtension"))
-      file = File(DOWNLOAD_LOCATION, "$filename.$fileExtension")
+      file = File(downloadLocation, "$filename.$fileExtension")
       // Remove from MediaStore
       val contentResolver: ContentResolver = context.contentResolver
       val contentUri: Uri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI
