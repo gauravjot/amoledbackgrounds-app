@@ -36,8 +36,6 @@ export interface SettingsStore {
   setLogsLastSent: (date: Date | null) => void;
 
   // Privacy Policy
-  IsPrivacyPolicyAccepted: boolean;
-  setPrivacyPolicyAccepted: (accepted: boolean) => void;
   PrivacyPolicyAcceptedVersion: string | null;
   setPrivacyPolicyAcceptedVersion: (version: string | null) => void;
 
@@ -70,7 +68,6 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
       rememberSearchHistory: settings.rememberSearchHistory || true,
       sendErrorLogsEnabled: settings.sendErrorLogsEnabled || true,
       logsLastSent: settings.logsLastSent || null,
-      IsPrivacyPolicyAccepted: settings.IsPrivacyPolicyAccepted || false,
       PrivacyPolicyAcceptedVersion: settings.PrivacyPolicyAcceptedVersion || null,
       changelogLastViewed: settings.changelogLastViewed || null,
     });
@@ -181,13 +178,6 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
     set(newSettings);
   },
 
-  IsPrivacyPolicyAccepted: false,
-  setPrivacyPolicyAccepted: async (e: boolean) => {
-    const currentSettings = await getSettings();
-    const newSettings = {...currentSettings, IsPrivacyPolicyAccepted: e};
-    await AsyncStorage.setItem("settings", JSON.stringify(newSettings));
-    set(newSettings);
-  },
   PrivacyPolicyAcceptedVersion: null,
   setPrivacyPolicyAcceptedVersion: async (version: string | null) => {
     const currentSettings = await getSettings();
