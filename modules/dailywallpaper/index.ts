@@ -2,6 +2,8 @@
 // and on native platforms to DailyWallpaper.ts
 import DailyWallpaperModule from "./src/DailyWallpaperModule";
 
+export const Module = DailyWallpaperModule;
+
 //
 export async function registerDailyWallpaperService(
   type: "online" | "downloaded",

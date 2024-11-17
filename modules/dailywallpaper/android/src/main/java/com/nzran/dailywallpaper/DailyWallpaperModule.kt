@@ -36,7 +36,7 @@ class DailyWallpaperModule : Module() {
 
       // Schedule the worker
       val workManager = WorkManager.getInstance(context)
-      val workRequest = PeriodicWorkRequestBuilder<BackgroundWorker>(15, java.util.concurrent.TimeUnit.MINUTES)
+      val workRequest = PeriodicWorkRequestBuilder<BackgroundWorker>(1, java.util.concurrent.TimeUnit.DAYS)
         .addTag("dailyWallpaper")
         .build()
       workManager.enqueueUniquePeriodicWork("dailyWallpaper", ExistingPeriodicWorkPolicy.REPLACE, workRequest)

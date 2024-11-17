@@ -1,6 +1,5 @@
 import {FlatList, View} from "react-native";
 import {Text} from "@/components/ui/Text";
-import {SafeAreaView} from "react-native-safe-area-context";
 import React from "react";
 import {getWallpapers} from "@/lib/services/get_wallpapers";
 import {useMutation} from "@tanstack/react-query";
@@ -106,7 +105,7 @@ export default function HomeScreen() {
   }, [sort]);
 
   return (
-    <SafeAreaView className="bg-background">
+    <>
       <View className="h-screen bg-background">
         <Animated.View style={{top: topBarAnimateTop, opacity: topBarAnimateOpacity}} className="absolute z-10 w-full">
           <TopBar showLoader={posts !== null && wallpaperMutation.isPending} title="Amoled Backgrounds">
@@ -190,7 +189,7 @@ export default function HomeScreen() {
         />
       </View>
       <SendLogs isSendLogsEnabled={store.sendErrorLogsEnabled} />
-    </SafeAreaView>
+    </>
   );
 }
 
