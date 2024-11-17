@@ -10,6 +10,8 @@ import ChangeLogDialog from "@/components/ChangeLog";
 import {useSettingsStore} from "@/store/settings";
 import Constants from "expo-constants";
 import {SafeAreaView} from "react-native-safe-area-context";
+import PrivacyPolicyDialog from "@/components/PrivacyPolicyDialog";
+import {PRIVACY_POLICY_VERSION} from "@/appconfig";
 
 const TABS: {
   [key: string]: {name: string; Icon: LucideIcon; sort: number};
@@ -30,6 +32,12 @@ export default function TabLayout() {
         tabBar={props => <TabBar state={props.state} descriptors={props.descriptors} navigation={props.navigation} />}
         screenOptions={{
           headerShown: false,
+        }}
+      />
+      <PrivacyPolicyDialog
+        isVisible={store.PrivacyPolicyAcceptedVersion !== PRIVACY_POLICY_VERSION}
+        onClose={() => {
+          store.setPrivacyPolicyAcceptedVersion(PRIVACY_POLICY_VERSION);
         }}
       />
       <ChangeLogDialog
