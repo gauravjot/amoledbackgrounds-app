@@ -1,4 +1,4 @@
-import {ScrollView, View} from "react-native";
+import {Dimensions, ScrollView, View} from "react-native";
 import {Text} from "./ui/Text";
 import {Button, ButtonText} from "./ui/Button";
 import React from "react";
@@ -7,6 +7,8 @@ import {PencilRuler, Send, Settings, Sparkles} from "lucide-react-native";
 
 export default function ChangeLogDialog({isVisible, onClose}: {isVisible: boolean; onClose: () => void}) {
   const CHANGELOG_TITLE = "🎉 V2.0.0 Alpha Release";
+  const width = Dimensions.get("window").width;
+  const height = Dimensions.get("window").height;
 
   const style = {
     body_header: "pb-2 mb-2 mt-4 border-b border-solid border-zinc-700 flex flex-row items-center gap-3",
@@ -19,7 +21,8 @@ export default function ChangeLogDialog({isVisible, onClose}: {isVisible: boolea
       <Animated.View
         entering={FadeInUp.delay(100)}
         exiting={FadeOutDown.duration(200)}
-        className="max-w-md mx-4 my-24 rounded-lg min-w-80 max-h-[600px] bg-zinc-900">
+        className="max-w-3xl mx-6 my-24 rounded-lg min-w-80 bg-zinc-900"
+        style={{height: height - 250, maxHeight: 1000}}>
         <Text className="p-4 text-[1.5rem] font-bold">{CHANGELOG_TITLE}</Text>
         <ScrollView className="px-4">
           <Text className={style.body_text}>
