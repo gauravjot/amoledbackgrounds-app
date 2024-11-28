@@ -158,7 +158,7 @@ export default function DownloadScreen() {
       }
     }
     // Handle Download Complete Event
-    if (complete_event !== null && complete_event.success) {
+    if (complete_event !== null && complete_event.success && downloadState.status === "downloading") {
       setDownloadState({status: "complete", progress: null});
       setFileSystemPath(complete_event.path);
       store.addFile({

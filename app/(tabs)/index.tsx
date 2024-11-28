@@ -68,7 +68,7 @@ export default function HomeScreen() {
     },
     onError: error => {
       // Log error
-      if (!error.toString().toLowerCase().includes("safeerror")) {
+      if (!error.toString().toLowerCase().includes("safeerror") && error.message !== "Network Error") {
         SqlUtility.insertErrorLog(
           {
             file: "(tabs)/index.tsx[HomeScreen]",
@@ -143,6 +143,14 @@ export default function HomeScreen() {
             </View>
           </>
         )}
+        {wallpaperMutation.isError && posts === null && !wallpaperMutation.error.message?.includes("SafeError") && (
+          <>
+            {/* show in center of screen */}
+            <View className="absolute top-0 right-0 z-0 flex items-center justify-center w-full h-screen">
+              <ErrorFetching reload={() => wallpaperMutation.mutate()} />
+            </View>
+          </>
+        )}
         {/* TODO: on sort change, scroll to top */}
         <FlatList
           ref={flatListRef}
@@ -176,19 +184,38 @@ export default function HomeScreen() {
                 </View>
               );
             } else if ((posts?.pagination.page_number ?? 0) > 0) {
-              return (
+              return wallpaperMutation.isPending ? (
                 <View className="flex flex-row items-center justify-center w-full gap-2 pt-16 pb-24 mb-48">
                   <LoadingSpinner size={24} color="#676767" />
                   <Animated.View style={fadingPulseAnimation(4500)}>
                     <Text className="text-sm text-zinc-200">Loading more...</Text>
                   </Animated.View>
                 </View>
+              ) : wallpaperMutation.isError ? (
+                <View className="flex flex-row items-center justify-center w-full gap-2 pt-16 pb-24 mb-48">
+                  <ErrorFetching reload={() => wallpaperMutation.mutate()} />
+                </View>
+              ) : (
+                <></>
               );
             }
           }}
         />
       </View>
       <SendLogs isSendLogsEnabled={store.sendErrorLogsEnabled} />
+    </>
+  );
+}
+
+function ErrorFetching({reload}: {reload: () => void}) {
+  return (
+    <>
+      {/* show in center of screen */}
+      <CircleX size={48} color="#343434" />
+      <Text className="mt-2 text-sm font-bold text-zinc-600">Error occured while loading wallpapers...</Text>
+      <Button className="mt-2" variant={"accent"} size={"md"} onPress={reload}>
+        <ButtonText>Retry</ButtonText>
+      </Button>
     </>
   );
 }

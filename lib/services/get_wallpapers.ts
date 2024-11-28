@@ -37,10 +37,14 @@ export const getWallpapers = async (
       } else {
         // Construct the image object
         try {
+          // check if images exist
+          if (!post.preview || !post.preview.images || post.preview.images.length === 0) {
+            continue;
+          }
+
           const resolutions = post.preview.images[0].resolutions;
           const source = post.preview.images[0].source;
 
-          // check if images exist
           if (resolutions === undefined || source === undefined) {
             continue;
           }

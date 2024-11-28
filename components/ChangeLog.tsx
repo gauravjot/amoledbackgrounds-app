@@ -6,7 +6,7 @@ import Animated, {FadeInUp, FadeOutDown} from "react-native-reanimated";
 import {PencilRuler, Send, Settings, Sparkles} from "lucide-react-native";
 
 export default function ChangeLogDialog({isVisible, onClose}: {isVisible: boolean; onClose: () => void}) {
-  const CHANGELOG_TITLE = "🎉 V2.0.0 Alpha Release";
+  const CHANGELOG_TITLE = "🎉 V2.0.0 is here!";
   const width = Dimensions.get("window").width;
   const height = Dimensions.get("window").height;
 
@@ -27,8 +27,7 @@ export default function ChangeLogDialog({isVisible, onClose}: {isVisible: boolea
         <ScrollView className="px-4">
           <Text className={style.body_text}>
             AmoledBackgrounds Update – Major Rewrite!
-            {"\n\n"}Thank You, Alpha Testers! We appreciate you for joining the alpha program and helping shape the
-            future of AmoledBackgrounds.
+            {"\n\n"}Thank You for using AmoledBackgrounds. This version brings major changes to the app, including —
           </Text>
           <View className={style.body_header}>
             <PencilRuler size="18" color="#df83a2" fill="#785765" />
