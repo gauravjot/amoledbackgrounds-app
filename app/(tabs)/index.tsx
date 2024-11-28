@@ -25,7 +25,7 @@ type PostsType = {
 export default function HomeScreen() {
   const store = useSettingsStore();
   const flatListRef = React.useRef<FlatList>(null);
-  const [posts, setPosts] = React.useState<PostsType>();
+  const [posts, setPosts] = React.useState<PostsType>(null);
   const [sort, setSort] = React.useState<SortOptions>(store.rememberSortPreferences ? store.homeSort : SortOptions.Hot);
 
   // Animations
@@ -133,24 +133,6 @@ export default function HomeScreen() {
             </Button>
           </View>
         )}
-        {/* LOADING SPINNER */}
-        {wallpaperMutation.isPending && posts === null && (
-          <>
-            {/* show in center of screen */}
-            <View className="absolute top-0 right-0 z-0 flex items-center justify-center w-full h-screen">
-              <LoadingSpinner size={48} color="#343434" />
-              <Text className="mt-2 text-sm font-bold text-zinc-600">Loading...</Text>
-            </View>
-          </>
-        )}
-        {wallpaperMutation.isError && posts === null && !wallpaperMutation.error.message?.includes("SafeError") && (
-          <>
-            {/* show in center of screen */}
-            <View className="absolute top-0 right-0 z-0 flex items-center justify-center w-full h-screen">
-              <ErrorFetching reload={() => wallpaperMutation.mutate()} />
-            </View>
-          </>
-        )}
         {/* TODO: on sort change, scroll to top */}
         <FlatList
           ref={flatListRef}
@@ -192,7 +174,7 @@ export default function HomeScreen() {
                   </Animated.View>
                 </View>
               ) : wallpaperMutation.isError ? (
-                <View className="flex flex-row items-center justify-center w-full gap-2 pt-16 pb-24 mb-48">
+                <View className="flex flex-col items-center justify-center w-full pt-16 pb-24 mb-36">
                   <ErrorFetching reload={() => wallpaperMutation.mutate()} />
                 </View>
               ) : (
@@ -201,6 +183,24 @@ export default function HomeScreen() {
             }
           }}
         />
+        {/* LOADING SPINNER */}
+        {wallpaperMutation.isPending && posts === null && (
+          <>
+            {/* show in center of screen */}
+            <View className="absolute top-0 right-0 z-0 flex items-center justify-center w-full h-screen">
+              <LoadingSpinner size={48} color="#343434" />
+              <Text className="mt-2 text-sm font-bold text-zinc-600">Loading...</Text>
+            </View>
+          </>
+        )}
+        {wallpaperMutation.isError && posts === null && (
+          <>
+            {/* show in center of screen */}
+            <View className="absolute top-0 right-0 z-0 flex items-center justify-center w-full h-screen">
+              <ErrorFetching reload={() => wallpaperMutation.mutate()} />
+            </View>
+          </>
+        )}
       </View>
       <SendLogs isSendLogsEnabled={store.sendErrorLogsEnabled} />
     </>
@@ -212,8 +212,9 @@ function ErrorFetching({reload}: {reload: () => void}) {
     <>
       {/* show in center of screen */}
       <CircleX size={48} color="#343434" />
-      <Text className="mt-2 text-sm font-bold text-zinc-600">Error occured while loading wallpapers...</Text>
-      <Button className="mt-2" variant={"accent"} size={"md"} onPress={reload}>
+      <Text className="mt-2 font-bold text-md text-zinc-600">Error occured while loading wallpapers...</Text>
+      <Text className="mt-2 text-zinc-600 text-md">Make sure you are connected to the internet.</Text>
+      <Button className="mt-4" variant={"accent"} size={"md"} onPress={reload}>
         <ButtonText>Retry</ButtonText>
       </Button>
     </>

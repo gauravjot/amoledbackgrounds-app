@@ -7,7 +7,7 @@ import {useMutation} from "@tanstack/react-query";
 import {getWallpapersFromSearch} from "@/lib/services/search_wallpapers";
 import {Input} from "@/components/ui/Input";
 import useDebounce from "@/hooks/useDebounce";
-import {Search, SearchX} from "lucide-react-native";
+import {CircleX, Search, SearchX} from "lucide-react-native";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import {LinearGradient} from "expo-linear-gradient";
 import {useSettingsStore} from "@/store/settings";
@@ -22,7 +22,7 @@ type PostsType = {
 } | null;
 
 export default function SearchScreen() {
-  const [posts, setPosts] = React.useState<PostsType>();
+  const [posts, setPosts] = React.useState<PostsType>(null);
   const [query, setQuery] = React.useState("");
   const inputRef = React.useRef<TextInput>(null);
   const debouncedQuery = useDebounce(query, query.length > 2 ? 500 : 0);
@@ -82,7 +82,7 @@ export default function SearchScreen() {
     },
     onError: error => {
       // Log error
-      if (!error.toString().toLowerCase().includes("safeerror")) {
+      if (!error.toString().toLowerCase().includes("safeerror") && error.message !== "Network Error") {
         SqlUtility.insertErrorLog(
           {
             file: "(tabs)/search.tsx[SearchScreen]",
@@ -122,16 +122,6 @@ export default function SearchScreen() {
             </View>
           </View>
         </LinearGradient>
-        {/* LOADING SPINNER */}
-        {wallpaperMutation.isPending && posts === null && (
-          <>
-            {/* show in center of screen */}
-            <View className="absolute top-0 right-0 z-0 flex items-center justify-center w-full h-screen">
-              <LoadingSpinner size={48} color="#343434" />
-              <Text className="mt-2 text-sm font-bold text-zinc-600">Loading...</Text>
-            </View>
-          </>
-        )}
         {debouncedQuery.length < 3 ? (
           <>
             {store.rememberSearchHistory && (
@@ -153,10 +143,6 @@ export default function SearchScreen() {
                 )}
               </View>
             )}
-            <View className="absolute top-0 right-0 z-0 flex items-center justify-center w-full h-screen -mt-16">
-              <Search size={48} color="#565656" strokeWidth={1.25} />
-              <Text className="mt-2 font-bold text-zinc-600">Type in the search box above to get started</Text>
-            </View>
           </>
         ) : wallpaperMutation.isSuccess && posts?.posts.length === 0 ? (
           <View className="absolute top-0 right-0 z-0 flex items-center justify-center w-full h-screen -mt-16">
@@ -195,7 +181,11 @@ export default function SearchScreen() {
                   <Text className="px-4 text-sm text-zinc-400">End of posts for current filter</Text>
                 </View>
               );
-            } else if ((posts?.pagination.page_number ?? 0) > 0 && posts?.pagination.after != null) {
+            } else if (
+              wallpaperMutation.isPending &&
+              (posts?.pagination.page_number ?? 0) > 0 &&
+              posts?.pagination.after != null
+            ) {
               return (
                 <View className="flex flex-row items-center justify-center w-full gap-2 pt-16 pb-24 mb-48">
                   <LoadingSpinner size={24} color="#676767" />
@@ -204,10 +194,56 @@ export default function SearchScreen() {
                   </Animated.View>
                 </View>
               );
+            } else if (wallpaperMutation.isError && (posts?.posts.length ?? 0) > 0) {
+              return (
+                <View className="flex flex-col items-center justify-center w-full pt-16 pb-24 mb-36">
+                  <ErrorFetching reload={() => wallpaperMutation.mutate(debouncedQuery)} />
+                </View>
+              );
             }
           }}
         />
+        {wallpaperMutation.isPending && (posts === null || posts.posts.length === 0) ? (
+          /* LOADING SPINNER */
+          <>
+            <View className="absolute top-0 right-0 z-0 flex items-center justify-center w-full h-screen -mt-16">
+              <LoadingSpinner size={48} color="#343434" />
+              <Text className="mt-2 text-sm font-bold text-zinc-600">Loading...</Text>
+            </View>
+          </>
+        ) : wallpaperMutation.isError && (posts === null || posts.posts.length === 0) ? (
+          /* Error message */
+          <>
+            <View className="absolute top-0 right-0 z-0 flex items-center justify-center w-full h-screen -mt-16">
+              <ErrorFetching reload={() => wallpaperMutation.mutate(debouncedQuery)} />
+            </View>
+          </>
+        ) : posts === null || posts.posts.length === 0 ? (
+          /* Type in to search */
+          <>
+            <View className="absolute top-0 right-0 z-0 flex items-center justify-center w-full h-screen -mt-16">
+              <Search size={48} color="#565656" strokeWidth={1.25} />
+              <Text className="mt-2 font-bold text-zinc-600">Type in the search box above to get started</Text>
+            </View>
+          </>
+        ) : (
+          <></>
+        )}
       </View>
+    </>
+  );
+}
+
+function ErrorFetching({reload}: {reload: () => void}) {
+  return (
+    <>
+      {/* show in center of screen */}
+      <CircleX size={48} color="#343434" />
+      <Text className="mt-2 font-bold text-md text-zinc-600">Error occured while loading wallpapers...</Text>
+      <Text className="mt-2 text-zinc-600 text-md">Make sure you are connected to the internet.</Text>
+      <Button className="mt-4" variant={"accent"} size={"md"} onPress={reload}>
+        <ButtonText>Retry</ButtonText>
+      </Button>
     </>
   );
 }
