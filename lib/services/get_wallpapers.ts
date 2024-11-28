@@ -100,7 +100,6 @@ export const getWallpapers = async (
             },
             deviceIdentifier,
           );
-          console.log(JSON.stringify(post));
         }
       }
     }
