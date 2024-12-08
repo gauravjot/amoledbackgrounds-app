@@ -1,50 +1,39 @@
-# Welcome to your Expo app 👋
+# AmoledBackgrounds
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+AmoledBackgrounds provide an easy and quick way for users to get wallpapers from r/AmoledBackgrounds subreddit on popular Reddit platform.
 
-## Get started
+<div align="center">
+<a href="https://play.google.com/store/apps/details?id=com.droidheat.amoledbackgrounds"><img alt="Get it on Google Play" src="press/play_store_badge.png" height="48px"/></a>
+<br/><b>100k+</b> Downloads • <b>900+</b> Reviews • <b>4.2</b> ⭐ Average Rating • Requires Android 11+</div>
 
-1. Install dependencies
+<br/>
 
-   ```bash
-   npm install
-   ```
+![Screenshot](press/screenshots.png)
 
-2. Start the app
+## Features
 
-   ```bash
-    npx expo start
-   ```
+✨ Exclusive Designs - Unique wallpapers crafted for AMOLED displays.
+🔋 Battery-Friendly - Deep blacks save power on AMOLED screens.
+🚀 Easy to Use - Browse, download, and apply wallpapers effortlessly.
+🌍 Updated Regularly - Fresh wallpapers added every day.
+⭐ High-Resolution - 4K and HD wallpapers for a crisp display.
 
-In the output, you'll find options to open the app in a
+## Tech Stack
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+- **Framework**: React Native (Expo)
+- **State Management**: Zustand
+- **Styling**: Tailwind CSS
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+## Contribution
 
-## Get a fresh project
+There are several ways you can contribute to this project:
 
-When you're ready, run:
+1. Code Contributions: You can help us by writing code, fixing bugs, and implementing new features. Check out the Issues section for tasks that need attention or suggest your own improvements.
 
-```bash
-npm run reset-project
-```
+2. Bug Reports: If you encounter a bug while using [Repository Name], please report it in the Issues section. Be sure to include relevant details that can help us reproduce the issue.
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+3. Feature Requests: Have an idea for a new feature? Share it with us in the Issues section. We encourage discussions around potential enhancements to the project.
 
-## Learn more
+## License
 
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+CC-BY-NC-4.0 License. You are hereby allowed to use the code in any personal capacity, including modifying and sharing it with others. You are not allowed to use the code for commercial purposes. Please check [LICENSE.md](LICENSE.md) file for complete license.
