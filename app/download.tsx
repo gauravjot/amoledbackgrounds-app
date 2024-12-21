@@ -13,6 +13,7 @@ import {
   ExternalLink,
   ImageIcon,
   Maximize2,
+  Palette,
 } from "lucide-react-native";
 import {Button, ButtonText} from "@/components/ui/Button";
 import * as WebBrowser from "expo-web-browser";
@@ -26,6 +27,8 @@ import {ToastAndroid} from "react-native";
 import {useSettingsStore} from "@/store/settings";
 import * as SqlUtility from "@/lib/utils/sql";
 import {useEvent} from "expo";
+import {useQuery} from "@tanstack/react-query";
+import {getBlackPercentage} from "@/lib/services/get_black_percentage";
 
 type DownloadState = {
   status: "idle" | "downloading" | "complete" | "error_finishing" | "error_starting";
@@ -51,11 +54,12 @@ export default function DownloadScreen() {
     .trim()
     .replaceAll(" ", "_")}_-_${wallpaper.id}_amoled_droidheat`;
   const file_extension = wallpaper.image.url.split(".").pop() || ".png";
-  const old_filename = `${wallpaper.title
-    .replace(/[\/\\#,+()|~%'":*?<>{}]/g, "") // Remove special characters
-    .replace(/\s\s+/g, " ") // Remove extra spaces
-    .trim()
-    .replaceAll(" ", "_")}_t3_${wallpaper.id}_amoled_droidheat`;
+
+  // Query to get black percentage of the wallpaper
+  const blackPercentageQuery = useQuery({
+    queryKey: ["blackPercentage", wallpaper.image.url],
+    queryFn: () => getBlackPercentage(wallpaper.id.split("#")[0]),
+  });
 
   // Store to save downloaded wallpapers to
   const store = useDownloadedWallpapersStore();
@@ -240,7 +244,7 @@ export default function DownloadScreen() {
           <Animated.View
             className="relative w-full bg-background/80"
             style={{opacity: animateOpacity, bottom: animatePushDown}}>
-            <LinearGradient colors={["rgba(0,0,0,0.1)", "black"]} className="relative z-10 px-4 pt-1 pb-7">
+            <LinearGradient colors={["rgba(0,0,0,0.1)", "black"]} className="relative z-10 px-4 pt-7 pb-7">
               {downloadState.status !== "complete" && downloadState.status !== "downloading" ? (
                 <Button
                   variant={"accent"}
@@ -292,17 +296,23 @@ export default function DownloadScreen() {
               )}
               <View className="flex flex-row items-center gap-3 mt-3 bottom-1">
                 <View className="flex flex-row items-center justify-center gap-2 p-1 rounded bg-background/80">
-                  <ArrowUp size={16} color="white" />
+                  <ArrowUp size={16} color="#989898" />
                   <Text className="text-sm font-semibold text-zinc-200 pe-1">{wallpaper.score}</Text>
                 </View>
                 <View className="flex flex-row items-center justify-center gap-2 p-1 rounded bg-background/80">
-                  <Maximize2 size={16} color="white" />
+                  <Maximize2 size={16} color="#989898" />
                   <Text className="text-sm font-semibold text-zinc-200 pe-1">
                     {wallpaper.image.width} x {wallpaper.image.height}
                   </Text>
                 </View>
+                <View className="flex flex-row items-center justify-center gap-2 p-1 rounded bg-background/80">
+                  <Palette size={16} color="#989898" />
+                  <Text className="text-sm font-semibold text-zinc-200 pe-1">
+                    {blackPercentageQuery.isPending ? "..." : blackPercentageQuery.data + "% Black"}
+                  </Text>
+                </View>
               </View>
-              <View className="mt-4">
+              <View className="mt-2">
                 <Text className="text-lg font-bold text-foreground" numberOfLines={2}>
                   {wallpaper.title}
                 </Text>

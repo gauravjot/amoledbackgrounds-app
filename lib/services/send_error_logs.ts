@@ -1,5 +1,5 @@
 import {SEND_ERROR_LOGS_URL} from "@/appconfig";
-import axios, {AxiosError} from "axios";
+import axios from "axios";
 import * as SqlUtility from "@/lib/utils/sql";
 
 export default async function SendErrorLogs(isSendingEnabled: boolean): Promise<boolean> {

@@ -1,8 +1,9 @@
 import * as SQLite from "expo-sqlite";
 import * as Device from "expo-device";
+import Constants from "expo-constants";
 
 const DB_NAME = "mysqlite.db";
-const APP_NAME = "AmoledBackgrounds";
+const APP_NAME = "AmoledBackgrounds:" + (Constants.expoConfig?.version ?? "Unknown");
 const DEVICE_NAME = Device.designName || "Unknown";
 const DEVICE_PLATFORM = Device.platformApiLevel || 0;
 const DEVICE_MODEL = Device.manufacturer + " " + Device.modelName;

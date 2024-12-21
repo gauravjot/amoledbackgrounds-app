@@ -157,7 +157,7 @@ export default function SearchScreen() {
           keyExtractor={item => item.id}
           data={posts?.posts}
           onEndReached={() => {
-            if (!wallpaperMutation.isPending) {
+            if (!wallpaperMutation.isPending && debouncedQuery.length > 2) {
               wallpaperMutation.mutate(debouncedQuery);
             }
           }}
