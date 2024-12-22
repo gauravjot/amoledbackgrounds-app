@@ -4,7 +4,7 @@
     "slug": "amoledbackgrounds-app",
     "version": "2.1.0",
     "android": {
-      "versionCode": 35,
+      "versionCode": 36,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#000000"
