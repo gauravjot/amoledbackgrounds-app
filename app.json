@@ -41,10 +41,16 @@
       [
         "expo-asset",
         {
-          "assets": ["assets/images/icon.png"]
+          "assets": [
+            "assets/images/icon.png"
+          ]
         }
       ],
-      ["./apptheme.js", {}]
+      [
+        "./apptheme.js",
+        {}
+      ],
+      "expo-sqlite"
     ],
     "web": {
       "bundler": "metro",
