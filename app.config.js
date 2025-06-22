@@ -1,0 +1,98 @@
+/**
+ * Merges the app static configuration with the dynamic one, which is also
+ * required for the compilation process.
+ *
+ * @param {import("expo/config").ConfigContext} options
+ *   Static Expo configuration.
+ * @returns {import("expo/config").AppJSONConfig}
+ *   Final 'App.json' configuration (merged).
+ */
+
+module.exports = {
+  expo: {
+    name: "AmoledBackgrounds",
+    slug: "amoledbackgrounds-app",
+    version: "2.1.0",
+    android: {
+      versionCode: 36,
+      adaptiveIcon: {
+        foregroundImage: "./assets/images/adaptive-icon.png",
+        backgroundColor: "#000000",
+      },
+      permissions: [
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.ACCESS_MEDIA_LOCATION",
+        "android.permission.SET_WALLPAPER",
+        "android.permission.READ_MEDIA_IMAGES",
+        "android.permission.ACCESS_NETWORK_STATE",
+        "android.permission.RECEIVE_BOOT_COMPLETED",
+        "android.permission.SEND_DOWNLOAD_COMPLETED_INTENTS",
+      ],
+      package: "com.droidheat.amoledbackgrounds",
+      userInterfaceStyle: "dark",
+    },
+    plugins: [
+      "expo-router",
+      [
+        "expo-build-properties",
+        {
+          android: {
+            compileSdkVersion: 35,
+            targetSdkVersion: 35,
+            minSdkVersion: 30,
+            buildToolsVersion: "35.0.0",
+          },
+          ios: {
+            deploymentTarget: "15.1",
+          },
+        },
+      ],
+      [
+        "expo-asset",
+        {
+          assets: ["assets/images/icon.png"],
+        },
+      ],
+      ["./apptheme.js", {}],
+      "expo-sqlite",
+    ],
+    web: {
+      bundler: "metro",
+      output: "static",
+      favicon: "./assets/images/icon.svg",
+    },
+    orientation: "portrait",
+    icon: "./assets/images/icon.png",
+    scheme: "myapp",
+    userInterfaceStyle: "dark",
+    backgroundColor: "#000000",
+    splash: {
+      image: "./assets/images/splash.png",
+      resizeMode: "contain",
+      backgroundColor: "#000000",
+    },
+    ios: {
+      supportsTablet: true,
+    },
+    experiments: {
+      typedRoutes: true,
+    },
+    extra: {
+      router: {
+        origin: false,
+      },
+      eas: {
+        projectId: "665ec201-58fb-4ec6-bfc5-76973af8014f",
+      },
+    },
+  },
+  // https://docs.page/invertase/react-native-google-mobile-ads~517
+  "react-native-google-mobile-ads": {
+    android_app_id: process.env.EXPO_PUBLIC_ADMOB_APP_ID,
+    ios_app_id: process.env.EXPO_PUBLIC_ADMOB_APP_ID,
+  },
+  extra: {
+    banner_ad: process.env.EXPO_PUBLIC_BANNER_AD_ID,
+  },
+};
