@@ -16,6 +16,7 @@ import Select from "@/components/ui/Select";
 import TopBar from "@/components/ui/TopBar";
 import * as SqlUtility from "@/lib/utils/sql";
 import SendErrorLogs from "@/lib/services/send_error_logs";
+import BannerAdmob from "@/lib/admob/Banner";
 
 type PostsType = {
   posts: WallpaperPostType[];
@@ -158,6 +159,15 @@ export default function HomeScreen() {
           columnWrapperClassName="gap-3"
           contentContainerClassName="gap-3"
           renderItem={({item}) => <OnlineWallpaperGridItem {...item} />}
+          ListHeaderComponent={() =>
+            posts && posts.posts.length > 0 ? (
+              <View className="-mx-3">
+                <BannerAdmob />
+              </View>
+            ) : (
+              <></>
+            )
+          }
           ListFooterComponent={() => {
             if (posts && posts.pagination.after === null) {
               return (

@@ -1,6 +1,5 @@
 import {SortOptions} from "@/constants/sort_options";
 import {WALLPAPERS_URL} from "../../constants/wallpaper_options";
-import urlJoin from "url-join";
 import axios from "axios";
 import {PaginationType, WallpaperPostType} from "./wallpaper_type";
 import {WALLPAPERS_POST_LIMIT} from "@/appconfig";
@@ -13,13 +12,10 @@ export const getWallpapers = async (
   page_number: number,
   deviceIdentifier: string,
 ) => {
-  const url = urlJoin(
-    WALLPAPERS_URL,
-    getURIFromSort(sort),
-    `?limit=${WALLPAPERS_POST_LIMIT}`,
-    after ? `&after=${after}` : "",
-    `&count=${WALLPAPERS_POST_LIMIT * (page_number ?? 1)}`,
-  );
+  const url =
+    `${WALLPAPERS_URL}/${getURIFromSort(sort)}?limit=${WALLPAPERS_POST_LIMIT}` + after
+      ? `&after=${after}`
+      : "" + `&count=${WALLPAPERS_POST_LIMIT * (page_number ?? 1)}`;
 
   return await axios.get(url).then(response => {
     // Process response to get the data we need
@@ -33,6 +29,7 @@ export const getWallpapers = async (
         if (wallpapers) {
           for (let j = 0; j < wallpapers.length; j++) {
             const wallpaperPost = wallpapers[j];
+            wallpaperPost.flatlistId = posts.length + page_number * WALLPAPERS_POST_LIMIT;
             posts.push(wallpaperPost);
           }
         }

@@ -1,7 +1,6 @@
 import {WallpaperImageType, WallpaperPostType} from "../services/wallpaper_type";
 import {WALLPAPER_MIN_ALLOWED_HEIGHT, WALLPAPER_MIN_ALLOWED_WIDTH} from "@/appconfig";
 import {WALLPAPERS_URL} from "@/constants/wallpaper_options";
-import urlJoin from "url-join";
 
 /**
  * Return the processed post data
@@ -19,20 +18,23 @@ export function processRedditPost(post: any): WallpaperPostType[] | null {
   if (skipPost(post)) return null;
   // if post has 'gallery_data' field, it means it's an album
   if (post.gallery_data) {
+    return null;
+    // Currently reddit is offering webp images and that also from prev.redd.it domain
+    // So, we are skipping posts support for now
     const files = post.media_metadata;
     const file_ids = Object.keys(files);
     for (let i = 0; i < file_ids.length; i++) {
       const file = file_ids[i];
       const resolutions = files[file].p;
       const source = files[file].s;
-      const source_url = `https://i.redd.it/${file}.png`;
       // check if image size is appropriate
       if (source.x < WALLPAPER_MIN_ALLOWED_WIDTH || source.y < WALLPAPER_MIN_ALLOWED_HEIGHT) {
         continue;
       }
       // Construct the image object
+      const source_url = new URL(htmlDecode(files[file].s.u));
       const image: WallpaperImageType = {
-        url: source_url,
+        url: source_url.toString(),
         preview_url:
           resolutions.length > 0 ? htmlDecode(resolutions[Math.max(resolutions.length - 3, 0)].u) : undefined, // get the 3rd last resolution
         preview_small_url:
@@ -40,6 +42,10 @@ export function processRedditPost(post: any): WallpaperPostType[] | null {
         width: source.x,
         height: source.y,
       };
+      if (post.title.includes("Cosmic")) {
+        console.log(files[file_ids[i]]);
+        console.log(image);
+      }
       // Construct the post object
       const wallpaperPost: WallpaperPostType = {
         id: `${post.id}#${file}`,
@@ -54,7 +60,7 @@ export function processRedditPost(post: any): WallpaperPostType[] | null {
         author_flair: post.author_flair_text,
         postlink: "https://reddit.com" + post.permalink,
         comments: post.num_comments,
-        comments_link: urlJoin(WALLPAPERS_URL, "comments", post.id + ".json"),
+        comments_link: `${WALLPAPERS_URL}/comments/${post.id}.json`,
       };
       posts.push(wallpaperPost);
     }
@@ -100,7 +106,7 @@ export function processRedditPost(post: any): WallpaperPostType[] | null {
       author_flair: post.author_flair_text,
       postlink: "https://reddit.com" + post.permalink,
       comments: post.num_comments,
-      comments_link: urlJoin(WALLPAPERS_URL, "comments", post.id + ".json"),
+      comments_link: `${WALLPAPERS_URL}/comments/${post.id}.json`,
     };
     posts.push(wallpaperPost);
   }

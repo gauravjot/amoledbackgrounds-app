@@ -4,6 +4,8 @@ import * as SplashScreen from "expo-splash-screen";
 import {useEffect} from "react";
 import "react-native-reanimated";
 
+import mobileAds from "react-native-google-mobile-ads";
+
 import "../styles/global.css";
 import {QueryClient, QueryClientProvider} from "@tanstack/react-query";
 import {DarkTheme, ThemeProvider} from "@react-navigation/native";
@@ -16,6 +18,14 @@ import {SQLiteProvider} from "expo-sqlite";
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
+  // Initialize Google Mobile Ads SDK
+  useEffect(() => {
+    (async () => {
+      // Initialize the ads
+      await mobileAds().initialize();
+    })();
+  }, []);
+
   // Tanstack query client
   const queryClient = new QueryClient();
 

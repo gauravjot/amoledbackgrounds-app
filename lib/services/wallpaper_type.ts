@@ -1,4 +1,5 @@
 export type WallpaperPostType = {
+  flatlistId?: number;
   id: string;
   image: WallpaperImageType;
   flair: string;
