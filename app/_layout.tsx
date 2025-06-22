@@ -20,10 +20,14 @@ SplashScreen.preventAutoHideAsync();
 export default function RootLayout() {
   // Initialize Google Mobile Ads SDK
   useEffect(() => {
-    (async () => {
-      // Initialize the ads
-      await mobileAds().initialize();
-    })();
+    if (process.env.EXPO_PUBLIC_ADS_ENABLED === "true") {
+      (async () => {
+        // Initialize the ads
+        await mobileAds().initialize();
+      })();
+    } else {
+      console.log("Ads are disabled");
+    }
   }, []);
 
   // Tanstack query client

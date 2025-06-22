@@ -7,12 +7,13 @@ import Constants from "expo-constants";
 const iosAdmobBanner = Constants.expoConfig?.extra?.banner_ad;
 const androidAdmobBanner = Constants.expoConfig?.extra?.banner_ad;
 const productionID = Device.osName === "Android" ? androidAdmobBanner : iosAdmobBanner;
+const adsEnabled = process.env.EXPO_PUBLIC_ADS_ENABLED === "true";
 
 const BannerAdmob = () => {
   const [isAdLoaded, setIsAdLoaded] = useState<boolean>(false);
-  console.log("Ad loaded:", androidAdmobBanner);
+  console.log("Ad loaded:", adsEnabled ? androidAdmobBanner : "Disabled");
 
-  return (
+  return adsEnabled ? (
     <View style={{height: isAdLoaded ? "auto" : 0}}>
       <BannerAd
         // It is extremely important to use test IDs as you can be banned/restricted by Google AdMob for inappropriately using real ad banners during testing
@@ -27,6 +28,8 @@ const BannerAdmob = () => {
         }}
       />
     </View>
+  ) : (
+    <></>
   );
 };
 

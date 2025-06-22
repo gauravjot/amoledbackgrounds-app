@@ -13,9 +13,9 @@ export const getWallpapers = async (
   deviceIdentifier: string,
 ) => {
   const url =
-    `${WALLPAPERS_URL}/${getURIFromSort(sort)}?limit=${WALLPAPERS_POST_LIMIT}` + after
-      ? `&after=${after}`
-      : "" + `&count=${WALLPAPERS_POST_LIMIT * (page_number ?? 1)}`;
+    `${WALLPAPERS_URL}/${getURIFromSort(sort)}?limit=${WALLPAPERS_POST_LIMIT}` +
+    (after ? `&after=${after}` : "") +
+    `&count=${WALLPAPERS_POST_LIMIT * (page_number ?? 1)}`;
 
   return await axios.get(url).then(response => {
     // Process response to get the data we need

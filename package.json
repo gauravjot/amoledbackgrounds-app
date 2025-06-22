@@ -1,11 +1,11 @@
 {
   "name": "amoledbackgrounds-app",
   "main": "expo-router/entry",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "scripts": {
     "start": "expo start",
     "update": "expo install --check",
-    "android": "expo run:android",
+    "android": "node prebuild.js &&expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
     "test": "jest --watchAll",
@@ -48,6 +48,7 @@
     "react": "19.0.0",
     "react-dom": "19.0.0",
     "react-native": "0.79.2",
+    "react-native-css-interop": "^0.1.22",
     "react-native-gesture-handler": "~2.24.0",
     "react-native-google-mobile-ads": "^15.3.1",
     "react-native-reanimated": "~3.17.4",

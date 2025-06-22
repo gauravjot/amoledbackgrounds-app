@@ -12,9 +12,9 @@ module.exports = {
   expo: {
     name: "AmoledBackgrounds",
     slug: "amoledbackgrounds-app",
-    version: "2.1.0",
+    version: "2.1.1",
     android: {
-      versionCode: 36,
+      versionCode: 37,
       adaptiveIcon: {
         foregroundImage: "./assets/images/adaptive-icon.png",
         backgroundColor: "#000000",
@@ -45,6 +45,7 @@ module.exports = {
           },
           ios: {
             deploymentTarget: "15.1",
+            useFrameworks: "static",
           },
         },
       ],
@@ -86,11 +87,6 @@ module.exports = {
         projectId: "665ec201-58fb-4ec6-bfc5-76973af8014f",
       },
     },
-  },
-  // https://docs.page/invertase/react-native-google-mobile-ads~517
-  "react-native-google-mobile-ads": {
-    android_app_id: process.env.EXPO_PUBLIC_ADMOB_APP_ID,
-    ios_app_id: process.env.EXPO_PUBLIC_ADMOB_APP_ID,
   },
   extra: {
     banner_ad: process.env.EXPO_PUBLIC_BANNER_AD_ID,
