@@ -12,9 +12,9 @@ module.exports = {
   expo: {
     name: "AmoledBackgrounds",
     slug: "amoledbackgrounds-app",
-    version: "2.1.1",
+    version: "2.2.0-rc1",
     android: {
-      versionCode: 37,
+      versionCode: 38,
       adaptiveIcon: {
         foregroundImage: "./assets/images/adaptive-icon.png",
         backgroundColor: "#000000",
@@ -87,8 +87,5 @@ module.exports = {
         projectId: "665ec201-58fb-4ec6-bfc5-76973af8014f",
       },
     },
-  },
-  extra: {
-    banner_ad: process.env.EXPO_PUBLIC_BANNER_AD_ID,
   },
 };

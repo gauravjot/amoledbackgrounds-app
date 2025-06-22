@@ -2,10 +2,9 @@ import {View} from "react-native";
 import * as Device from "expo-device";
 import React, {useState} from "react";
 import {BannerAd, BannerAdSize, TestIds} from "react-native-google-mobile-ads";
-import Constants from "expo-constants";
 
-const iosAdmobBanner = Constants.expoConfig?.extra?.banner_ad;
-const androidAdmobBanner = Constants.expoConfig?.extra?.banner_ad;
+const iosAdmobBanner = process.env.EXPO_PUBLIC_BANNER_AD_ID || TestIds.BANNER;
+const androidAdmobBanner = process.env.EXPO_PUBLIC_BANNER_AD_ID || TestIds.BANNER;
 const productionID = Device.osName === "Android" ? androidAdmobBanner : iosAdmobBanner;
 const adsEnabled = process.env.EXPO_PUBLIC_ADS_ENABLED === "true";
 
