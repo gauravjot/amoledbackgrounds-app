@@ -5,14 +5,15 @@
   "scripts": {
     "start": "expo start",
     "update": "expo install --check",
-    "android": "node prebuild.js &&expo run:android",
+    "android": "node prebuild.js --env=local && expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
     "test": "jest --watchAll",
     "lint": "expo lint",
-    "build-eas-local": "eas build --platform android --profile production --local",
-    "build-eas-expo": "eas build --profile production --platform android",
-    "build-eas-local-dev": "eas build --platform android --profile development --local"
+    "build-eas-expo": "node prebuild.js --env=production && eas build --profile production --platform android",
+    "build-eas-expo-dev": "node prebuild.js --env=local && eas build --profile development --platform android",
+    "build-eas-local": "node prebuild.js --env=production && eas build --platform android --profile production --local",
+    "build-eas-local-dev": "node prebuild.js --env=local && eas build --platform android --profile development --local"
   },
   "jest": {
     "preset": "jest-expo"
